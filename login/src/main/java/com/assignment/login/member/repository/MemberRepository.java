@@ -1,4 +1,17 @@
 package com.assignment.login.member.repository;
 
-public interface MemberRepository {
+import com.assignment.login.member.domain.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface MemberRepository extends JpaRepository<Member, Long>{
+    //중복 닉네임
+    boolean existsByNickname(String nickname);
+    //중복 이메일
+    boolean existsByEmail(String email);
+    //이메일 찾기
+    Optional<Member> findByEmail(String email);
+
+
 }

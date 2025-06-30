@@ -2,11 +2,14 @@ package com.assignment.login.member.domain;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+@Getter
+@Setter
 @Entity
-@Table(name = "user")
+@Table(name = "`user`")//예약어 회피용 위해 백틱
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
