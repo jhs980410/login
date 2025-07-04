@@ -10,6 +10,6 @@ public class CustomErrorController implements ErrorController {
     @GetMapping("/error")
     public String handleError() {
         // 기본 오류 페이지 템플릿
-        return "/error/defaultError"; // templates/error/defaultError.html
+        return "error/defaultError"; // templates/error/defaultError.html
     }
 }

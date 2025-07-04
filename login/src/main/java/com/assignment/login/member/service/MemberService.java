@@ -28,4 +28,12 @@ public class MemberService {
         member.setLoginType("EMAIL");
         memberRepository.save(member);
     }
+
+    public boolean existsByEmail(String email) {
+        return memberRepository.existsByEmail(email);
+    }
+
+    public boolean existsByNickname(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
 }

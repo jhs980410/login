@@ -2,7 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'페이지 제목: ' + ${title}">로그인페이지</title>
+    <title th:text="'페이지 제목: ' + ${title} ?: '로그인'">로그인페이지</title>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/css/login.css">
@@ -104,7 +105,7 @@
                     <!-- 로그인 -->
                     <div id="login-tab-content" class="active">
                         <form class="login-form" th:action="@{/member/process-login}" method="post">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+<!--                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
 
                             <input type="text" class="input" id="user_login" name="username" autocomplete="off" placeholder="이메일">
                             <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호">
@@ -126,7 +127,7 @@
                                 <input type="email" class="input" id="user_email" autocomplete="off" placeholder="이메일" name="email">
                                 <button type="button" id="check_email_btn" class="check-btn">중복확인</button>
                             </div>
-                            <div id="email_feedback">사용할 수 있는 이메일입니다</div>
+                            <div id="email_feedback"></div>
 
                             <!-- 닉네임 -->
                             <div class="input-row">
@@ -165,6 +166,8 @@
 </div>
 
 <script src="/js/login.js"></script>
+<script src="/js/validation.js"></script>
+<script src="/js/signUp.js"></script>
 </body>
 </html>
 

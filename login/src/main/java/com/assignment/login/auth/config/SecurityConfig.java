@@ -36,12 +36,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/", "/home", "/css/**", "/js/**", "/images/**",
-                                "/member/loginPage", "/member/signup","/member/loginView", "/error/**"
-                        ).permitAll() // 인증이 필요하지 않은 경로
-                        .anyRequest().authenticated() // 나머지 경로는 인증 필요
+                        .requestMatchers("/member/**", "/css/**", "/js/**", "/images/**", "/", "/home", "/error/**","/api/members/check-email", "/api/members/check-nickname").permitAll()
+
+                        .anyRequest().authenticated()
                 )
+
                 .formLogin(form -> form
                         .loginPage("/member/loginPage") // 로그인 페이지
                         .loginProcessingUrl("/member/process-login") // 로그인 처리 URL

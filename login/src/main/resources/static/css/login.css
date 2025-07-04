@@ -834,3 +834,8 @@ input::placeholder {
     background-color: #999;
     cursor: default;
 }
+input, textarea, button, select {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 16px; /* 필요시 크기 통일 */
+    color: #fff;      /* 입력된 텍스트 색상 */
+}
