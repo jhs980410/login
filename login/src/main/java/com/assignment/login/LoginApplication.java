@@ -5,8 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 
+
 @SpringBootApplication
-@EntityScan("com.assignment.login.member.domain")
+@EntityScan(basePackages = {
+        "com.assignment.login.member.domain",
+        "com.assignment.login.loginfail.domain"
+})
 public class LoginApplication {
 
     public static void main(String[] args) {

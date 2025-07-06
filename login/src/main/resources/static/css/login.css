@@ -808,7 +808,7 @@ input::placeholder {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
 }
 
 .check-btn {

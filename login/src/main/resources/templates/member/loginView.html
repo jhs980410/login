@@ -105,11 +105,14 @@
                     <!-- 로그인 -->
                     <div id="login-tab-content" class="active">
                         <form class="login-form" th:action="@{/member/process-login}" method="post">
-<!--                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
+                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                             <input type="text" class="input" id="user_login" name="username" autocomplete="off" placeholder="이메일">
                             <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호">
-                            <input type="checkbox" class="checkbox" id="remember_me" name="remember_me"> <!-- ✅ name 속성 추가 -->
+                            <div th:if="${param.error}">
+                                <p class="error-msg">이메일 또는 비밀번호가 일치하지 않습니다.</p>
+                            </div>
+                            <input type="checkbox" class="checkbox" id="remember_me" name="remember_me"> <!--  name 속성 추가 -->
                             <label for="remember_me">자동 로그인</label>
                             <input type="submit" class="button" value="로그인">
 
@@ -134,7 +137,7 @@
                                 <input type="text" class="input" id="user_name" autocomplete="off" placeholder="닉네임" name="nickname">
                                 <button type="button" id="check_name_btn" class="check-btn">중복확인</button>
                             </div>
-                            <div id="name_feedback">사용할 수 있는 닉네임입니다</div>
+                            <div id="name_feedback"></div>
 
                             <input type="password" class="input" id="user_pass" autocomplete="off" placeholder="비밀번호" name="password">
                             <div id="pw_feedback"></div>
