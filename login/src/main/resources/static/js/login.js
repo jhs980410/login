@@ -99,40 +99,39 @@ $(function() {
 //         return false;
 //     });
 // });
-function login() {
-    const email = document.getElementById("user_login").value.trim();
-    const password = document.getElementById("user_password").value.trim();
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("login-form");
 
-    if (!email || !password) {
-        alert("이메일과 비밀번호를 입력해주세요.");
-        return;
-    }
+    form.addEventListener("submit", function (e) {
+        e.preventDefault(); // 기본 제출 막기
 
-    fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
-    })
-        .then(async res => {
-            if (!res.ok) {
-                const error = await res.json().catch(() => ({}));
-                alert(error.message || "로그인에 실패했습니다.");
-                return;
-            }
+        const email = document.getElementById("user_login").value.trim();
+        const password = document.getElementById("user_password").value.trim();
 
-            return res.json();
+        fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, password })
         })
-        .then(data => {
-            if (data && data.token) {
-                localStorage.setItem("jwt", data.token);
-                alert("로그인 성공!");
-                window.location.href = "/home";  // 로그인 성공 후 이동할 경로
-            }
-        })
-        .catch(err => {
-            console.error("Login Error:", err);
-            alert("서버 오류가 발생했습니다.");
-        });
-}
+            .then(async res => {
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    document.getElementById("error-message").style.display = "block";
+                    return;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.token) {
+                    localStorage.setItem("jwt", data.token);
+                    window.location.href = "/home"; // 로그인 성공 후 이동
+                }
+            })
+            .catch(err => {
+                console.error("Login Error:", err);
+                alert("서버 오류가 발생했습니다.");
+            });
+    });
+});

@@ -839,3 +839,7 @@ input, textarea, button, select {
     font-size: 16px; /* 필요시 크기 통일 */
     color: #fff;      /* 입력된 텍스트 색상 */
 }
+
+.btn{
+    padding: 1em 3em;
+}

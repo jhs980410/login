@@ -6,7 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.*;
@@ -23,8 +25,27 @@ public class JwtTokenUtil {
     @PostConstruct
     public void loadKeys() {
         try {
-            byte[] privateKeyBytes = Files.readAllBytes(Paths.get("keys/private_key.pem"));
-            byte[] publicKeyBytes = Files.readAllBytes(Paths.get("keys/public_key.pem"));
+            // classpath 리소스에서 키 파일 읽기
+            InputStream privateKeyStream = getClass().getClassLoader().getResourceAsStream("keys/private_key_pkcs8.pem");
+            InputStream publicKeyStream = getClass().getClassLoader().getResourceAsStream("keys/public_key.pem");
+
+            if (privateKeyStream == null || publicKeyStream == null) {
+                throw new RuntimeException("키 파일을 찾을 수 없습니다.");
+            }
+
+            // Base64 decoding이 아닌 PEM 처리 (헤더 제거 → Base64 디코딩)
+            String privatePem = new String(privateKeyStream.readAllBytes())
+                    .replaceAll("-----BEGIN PRIVATE KEY-----", "")
+                    .replaceAll("-----END PRIVATE KEY-----", "")
+                    .replaceAll("\\s", ""); // 줄바꿈, 공백 제거
+
+            String publicPem = new String(publicKeyStream.readAllBytes())
+                    .replaceAll("-----BEGIN PUBLIC KEY-----", "")
+                    .replaceAll("-----END PUBLIC KEY-----", "")
+                    .replaceAll("\\s", "");
+
+            byte[] privateKeyBytes = java.util.Base64.getDecoder().decode(privatePem);
+            byte[] publicKeyBytes = java.util.Base64.getDecoder().decode(publicPem);
 
             PKCS8EncodedKeySpec privateSpec = new PKCS8EncodedKeySpec(privateKeyBytes);
             X509EncodedKeySpec publicSpec = new X509EncodedKeySpec(publicKeyBytes);
@@ -33,10 +54,11 @@ public class JwtTokenUtil {
             privateKey = keyFactory.generatePrivate(privateSpec);
             publicKey = keyFactory.generatePublic(publicSpec);
 
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (Exception e) {
             throw new RuntimeException("키 로딩 실패", e);
         }
     }
+
 
     public String generateToken(String email) {
         return Jwts.builder()

@@ -3,6 +3,7 @@ package com.assignment.login.auth.config;
 import com.assignment.login.auth.handler.CustomAuthenticationFailureHandler;
 import com.assignment.login.auth.handler.CustomAuthenticationSuccessHandler;
 import com.assignment.login.auth.service.CustomUserDetailsService;
+import com.assignment.login.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,12 +17,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
@@ -34,44 +37,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                //  CSRF는 JWT 기반 API이므로 비활성화 (람다 방식)
                 .csrf(csrf -> csrf.disable())
-
-                //  세션을 사용하지 않음 (STATELESS)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                //  권한/인증 없이 접근 가능한 경로
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/login",              // 로그인 처리
-                                "/member/signup",               // 회원가입
-                                "/api/members/check-email",     // 중복 검사
+                                "/api/auth/login",
+                                "/member/loginPage",
+                                "/member/signup",
+                                "/api/members/check-email",
                                 "/api/members/check-nickname",
                                 "/css/**", "/js/**", "/images/**",
                                 "/", "/home", "/error/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-
-                //  formLogin 대신 직접 login API 처리
-                .formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
-                        .successHandler(customAuthenticationSuccessHandler)
-                        .failureHandler(customAuthenticationFailureHandler)
-                        .permitAll()
-                )
-
-                //  로그아웃도 필요시 커스터마이징
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessUrl("/member/loginPage?logout=true")
                         .permitAll()
                 );
 
+        // ✅ JWT 인증 필터 등록 (3단계에서 했던 부분)
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
+
 
     //  AuthenticationManager 등록 (로그인에 필요)
     @Bean

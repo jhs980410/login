@@ -28,8 +28,8 @@
 Thumbs.db
 
 # === Key files ===
-/keys/private_key.pem
-/keys/public_key.pem
+/src/main/resources/keys/private_key_pkcs8.pem
+/src/main/resources/keys/public_key.pem
 
 # === Environment ===
 .env

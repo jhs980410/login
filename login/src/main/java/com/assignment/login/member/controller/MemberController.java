@@ -39,7 +39,7 @@ public class MemberController {
     public String signup(@ModelAttribute MemberSignupRequest memberSignupRequest) {
         memberService.signup(memberSignupRequest);
         // 🔧 절대 경로로 리디렉션
-        return "redirect:/home";
+        return "redirect:/member/loginPage";
 
     }
 

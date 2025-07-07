@@ -104,27 +104,26 @@
                 <div class="tabs-content">
                     <!-- 로그인 -->
                     <div id="login-tab-content" class="active">
-                        <form class="login-form" th:action="@{/member/process-login}" method="post">
-                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-                            <input type="text" class="input" id="user_login" name="email" autocomplete="off" placeholder="이메일">
-                            <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호">
-                            <div th:if="${param.locked}">
-                                <p class="error-msg">
-                                    계정이 잠겨 있습니다.
-                                    <span th:if="${param.wait}" th:text="'잠금 해제까지 약 ' + ${param.wait} + '분 남았습니다.'"></span>
-                                </p>
+                        <form id="login-form" class="login-form">
+                            <input type="text" class="input" id="user_login" name="email" autocomplete="off" placeholder="이메일" required>
+                            <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호" required>
+
+                            <div id="locked-message" style="display: none;" class="error-msg">
+                                계정이 잠겨 있습니다.
+                                <span id="wait-message"></span>
                             </div>
 
-                            <div th:if="${param.error}">
-                                <p class="error-msg">이메일 또는 비밀번호가 일치하지 않습니다.</p>
+                            <div id="error-message" style="display: none;" class="error-msg">
+                                이메일 또는 비밀번호가 일치하지 않습니다.
                             </div>
-                            <input type="checkbox" class="checkbox" id="remember_me" name="remember_me"> <!--  name 속성 추가 -->
+
+                            <input type="checkbox" class="checkbox" id="remember_me" name="remember_me">
                             <label for="remember_me">자동 로그인</label>
-                            <button type="button" class="button" onclick="login()">
 
-
+                            <button type="submit" class="button btn">로그인</button>
                         </form>
+
                         <div class="help-action">
                             <p><i class="fa fa-arrow-left" aria-hidden="true"></i><a class="forgot" href="#">비밀번호 찾기</a></p>
                         </div>
