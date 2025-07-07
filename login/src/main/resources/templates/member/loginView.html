@@ -107,7 +107,7 @@
                         <form class="login-form" th:action="@{/member/process-login}" method="post">
                          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-                            <input type="text" class="input" id="user_login" name="username" autocomplete="off" placeholder="이메일">
+                            <input type="text" class="input" id="user_login" name="email" autocomplete="off" placeholder="이메일">
                             <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호">
                             <div th:if="${param.error}">
                                 <p class="error-msg">이메일 또는 비밀번호가 일치하지 않습니다.</p>

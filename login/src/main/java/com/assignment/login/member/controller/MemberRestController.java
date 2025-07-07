@@ -20,14 +20,23 @@ public class MemberRestController {
     }
 
     @GetMapping("/check-email")
-    public Map<String, Boolean> checkEmail(@RequestParam String email) {
+    public Map<String, Object> checkEmail(@RequestParam String email) {
         boolean exists = memberService.existsByEmail(email);
-        return Collections.singletonMap("exists", exists);
+        Map<String, Object> res = new HashMap<>();
+        res.put("exists", exists);
+        res.put("status", exists ? "fail" : "ok");
+        res.put("message", exists ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.");
+
+        return res;
     }
 
     @GetMapping("/check-nickname")
-    public Map<String, Boolean> checkNickname(@RequestParam String nickname) {
+    public Map<String, Object> checkNickname(@RequestParam String nickname) {
         boolean exists = memberService.existsByNickname(nickname);
-        return Collections.singletonMap("exists", exists);
+        Map<String, Object> res = new HashMap<>();
+        res.put("exists", exists);
+        res.put("status", exists ? "fail" : "ok");
+        res.put("message", exists ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다.");
+        return res;
     }
 }

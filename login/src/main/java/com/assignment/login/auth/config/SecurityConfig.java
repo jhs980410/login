@@ -1,5 +1,7 @@
 package com.assignment.login.auth.config;
 
+import com.assignment.login.auth.handler.CustomAuthenticationFailureHandler;
+import com.assignment.login.auth.handler.CustomAuthenticationSuccessHandler;
 import com.assignment.login.auth.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-
+    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -36,7 +39,9 @@ public class SecurityConfig {
                         .loginPage("/member/loginPage")
                         .loginProcessingUrl("/member/process-login")
                         .defaultSuccessUrl("/home", true)
-                        .failureUrl("/member/loginPage?error=true")
+                        .failureHandler(customAuthenticationFailureHandler) //로그인실패시
+                        .successHandler(customAuthenticationSuccessHandler) //로그인 성공
+                        .usernameParameter("email")
                         .permitAll()
                 )
                 .logout(logout -> logout

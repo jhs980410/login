@@ -20,10 +20,10 @@ function validateEmail($input) {
 }
 
 // 비밀번호 유효성 검사
-function isValidPassword(pw) {
-    const lengthValid = pw.length >= 8;
-    const letterValid = /[a-zA-Z]/.test(pw);
-    const numberValid = /[0-9]/.test(pw);
-    const specialValid = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
-    return lengthValid && letterValid && numberValid && specialValid;
-}
+// function isValidPassword(pw) {
+//     const lengthValid = pw.length >= 8;
+//     const letterValid = /[a-zA-Z]/.test(pw);
+//     const numberValid = /[0-9]/.test(pw);
+//     const specialValid = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
+//     return lengthValid && letterValid && numberValid && specialValid;
+// }
