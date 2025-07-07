@@ -1,33 +1,29 @@
 package com.assignment.login.auth.handler;
 
-import com.assignment.login.loginfail.service.LoginFailService;
-import com.assignment.login.member.domain.Member;
-import com.assignment.login.member.repository.MemberRepository;
-import jakarta.servlet.ServletException;
+import com.assignment.login.jwt.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final LoginFailService loginFailService;
-
+    private final JwtTokenUtil jwtTokenUtil;
+    //토큰발급처
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
-                                        Authentication authentication)
-            throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
 
-        String email = authentication.getName();
-        loginFailService.resetFailCount(email); // 로그인 성공 시 실패 카운트 초기화
+        String email = authentication.getName(); // UserDetailsService에서 반환한 식별자
+        String token = jwtTokenUtil.generateToken(email); //토큰 발급
 
-        response.sendRedirect("/home");
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"status\":\"success\", \"token\":\"" + token + "\"}");
     }
 }

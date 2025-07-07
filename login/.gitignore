@@ -1,37 +1,46 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# === Java / Spring ===
+/target/
+*.log
+*.tmp
+*.bak
+*.swp
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# === IDEA ===
+.idea/
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+*.iws
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# === VSCode ===
 .vscode/
+
+# === Gradle ===
+/build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# === Logs ===
+*.log
+**/application-debug.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Key files ===
+/keys/private_key.pem
+/keys/public_key.pem
+
+# === Environment ===
+.env
+*.env
+
+# === Test Coverage ===
+/coverage/
+*.exec
+
+# === Node (if fullstack) ===
+node_modules/
+
+# === 기타 ===
+/out/

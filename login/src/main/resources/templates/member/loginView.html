@@ -109,12 +109,19 @@
 
                             <input type="text" class="input" id="user_login" name="email" autocomplete="off" placeholder="이메일">
                             <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호">
+                            <div th:if="${param.locked}">
+                                <p class="error-msg">
+                                    계정이 잠겨 있습니다.
+                                    <span th:if="${param.wait}" th:text="'잠금 해제까지 약 ' + ${param.wait} + '분 남았습니다.'"></span>
+                                </p>
+                            </div>
+
                             <div th:if="${param.error}">
                                 <p class="error-msg">이메일 또는 비밀번호가 일치하지 않습니다.</p>
                             </div>
                             <input type="checkbox" class="checkbox" id="remember_me" name="remember_me"> <!--  name 속성 추가 -->
                             <label for="remember_me">자동 로그인</label>
-                            <input type="submit" class="button" value="로그인">
+                            <button type="button" class="button" onclick="login()">
 
 
                         </form>

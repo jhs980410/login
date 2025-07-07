@@ -37,21 +37,24 @@ public class LoginFailService {
         }
     }
 
-    // 로그인 실패 기록 (userId 기반)
-    public void recordFailure(Long userId) {
-        memberRepository.findById(userId)
-                .ifPresent(this::recordFail);
-    }
 
     // 로그인 성공 시 실패 기록 초기화
     public void resetFailCount(String email) {
-        memberRepository.findByEmail(email).ifPresent(member -> {
-            loginFailRepository.findByUserId(member.getId()).ifPresent(fail -> {
-                fail.setFailCount(0);
-                fail.setLastFailAt(null);
-                loginFailRepository.save(fail);
-            });
-        });
+        Member member = memberRepository.findByEmail(email).orElse(null);
+        if (member == null) {
+            return;
+        }
+
+        LoginFail loginFail = loginFailRepository.findByUserId(member.getId()).orElse(null);
+        if (loginFail != null) {
+            loginFail.setFailCount(0);
+            loginFailRepository.save(loginFail);
+        }
+
+        if (member.isLocked()) {
+            member.setLocked(false); //  잠금 해제
+            memberRepository.save(member);
+        }
     }
 
     // 실패 정보 새로 생성
