@@ -107,31 +107,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const email = document.getElementById("user_login").value.trim();
         const password = document.getElementById("user_password").value.trim();
-
+        const autoLogin = document.getElementById('remember_me').checked;
         fetch("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password,autoLogin })
         })
             .then(async res => {
-                if (!res.ok) {
-                    const error = await res.json().catch(() => ({}));
-                    document.getElementById("error-message").style.display = "block";
-                    return;
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data && data.token) {
-                    localStorage.setItem("jwt", data.token);
-                    window.location.href = "/home"; // 로그인 성공 후 이동
+                const status = res.status;
+
+                if (status === 200) {
+                    const data = await res.json();
+                    if (data.accessToken && data.refreshToken) {
+                        localStorage.setItem("accessToken", data.accessToken);
+                        localStorage.setItem("refreshToken", data.refreshToken);
+                        window.location.href = "/home";
+                    } else {
+                        showError("로그인에 실패했습니다.");
+                    }
+                } else if (status === 401 || status === 423) {
+                    // ✅ 실패 메시지 받아오기
+                    const data = await res.json().catch(() => ({}));
+                    const message = data.message || "로그인에 실패했습니다.";
+                    showError(message);
+                } else {
+                    showError("알 수 없는 오류가 발생했습니다.");
                 }
             })
             .catch(err => {
                 console.error("Login Error:", err);
-                alert("서버 오류가 발생했습니다.");
+                showError("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             });
+
+// 에러 메시지 표시 함수
+        function showError(msg) {
+            const errorMsg = document.getElementById("error-message");
+            errorMsg.textContent = msg;
+            errorMsg.style.display = "block";
+        }
+
     });
+
+    // 에러 메시지 표시 함수
+    function showError(message) {
+        const errorMsg = document.getElementById("error-message");
+        errorMsg.textContent = message;
+        errorMsg.style.display = "block";
+    }
 });

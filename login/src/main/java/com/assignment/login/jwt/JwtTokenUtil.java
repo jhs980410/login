@@ -20,8 +20,9 @@ public class JwtTokenUtil {
 
     private PrivateKey privateKey;
     private PublicKey publicKey;
-    private final long EXPIRATION_TIME = 1000 * 60 * 15; // 15분?
-
+    private final long EXPIRATION_TIME = 1000 * 60 * 15; // 15분
+    private final long REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 2; // 기본 리프레시 2일
+    private final long REMEMBER_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 14; // 자동 로그인 14일
     @PostConstruct
     public void loadKeys() {
         try {
@@ -59,7 +60,7 @@ public class JwtTokenUtil {
         }
     }
 
-
+    // Access Token
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -68,7 +69,17 @@ public class JwtTokenUtil {
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
+    //RefreshToken
+    public String generateRefreshToken(String email, boolean isAutoLogin) {
+        long expiration = isAutoLogin ? REMEMBER_EXPIRATION_TIME : REFRESH_EXPIRATION_TIME;
 
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+    }
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(publicKey)

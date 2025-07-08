@@ -65,4 +65,9 @@ public class LoginFailService {
         fail.setLastFailAt(LocalDateTime.now());
         return fail;
     }
+
+    public void recordFailByEmail(String email) {
+        memberRepository.findByEmail(email)
+                .ifPresent(this::recordFail);
+    }
 }

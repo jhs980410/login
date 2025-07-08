@@ -30,8 +30,9 @@ CREATE TABLE remember_token (
                                 ip_address VARCHAR(45),
                                 FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
-
-
+ALTER TABLE remember_token
+    ADD COLUMN auto_login BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE remember_token MODIFY token VARCHAR(2048);
 CREATE TABLE email_token (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              user_id BIGINT NOT NULL,

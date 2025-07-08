@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
-        // ✅ JWT 인증 필터 등록 (3단계에서 했던 부분)
+        //  JWT 인증 필터 등록
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

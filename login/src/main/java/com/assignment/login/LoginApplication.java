@@ -9,7 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EntityScan(basePackages = {
         "com.assignment.login.member.domain",
-        "com.assignment.login.loginfail.domain"
+        "com.assignment.login.loginfail.domain",
+        "com.assignment.login.auth.domain",
+        "com.assignment.login.jwt.domain"
 })
 public class LoginApplication {
 

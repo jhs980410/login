@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class CommonController {
 
     @GetMapping("/")
-    public String index() {
-        return "index";
+    public String redirectToLoginPage() {
+        return "redirect:/member/loginPage";
     }
     @GetMapping("/home")
     public String home() {
