@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/logout",
                                 "/member/loginPage",
                                 "/member/signup",
                                 "/api/members/check-email",
@@ -52,12 +53,8 @@ public class SecurityConfig {
                                 "/", "/home", "/error/**"
                         ).permitAll()
                         .anyRequest().authenticated()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessUrl("/member/loginPage?logout=true")
-                        .permitAll()
                 );
+
 
         //  JWT 인증 필터 등록
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

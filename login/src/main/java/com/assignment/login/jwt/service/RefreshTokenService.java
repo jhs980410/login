@@ -20,8 +20,7 @@ public class RefreshTokenService {
         refreshToken.setToken(token);
         refreshToken.setUserAgent(userAgent);
         refreshToken.setIpAddress(ipAddress);
-        refreshToken.setExpiredAt(LocalDateTime.now().plusDays(7)); // 7일 유효
-
+        refreshToken.setExpiredAt(LocalDateTime.now().plusDays(7));
         refreshTokenRepository.save(refreshToken);
     }
 
@@ -32,4 +31,9 @@ public class RefreshTokenService {
     public void deleteByUserId(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
     }
+
+    public void deleteByToken(String token) {
+        refreshTokenRepository.deleteByToken(token);
+    }
 }
+
