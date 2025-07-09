@@ -1,14 +1,11 @@
 package com.assignment.login.auth.service;
 
 import com.assignment.login.auth.dto.LoginRequest;
-import com.assignment.login.jwt.JwtTokenUtil;
-import com.assignment.login.jwt.domain.RefreshToken;
-import com.assignment.login.jwt.repository.RefreshTokenRepository;
-import com.assignment.login.jwt.service.RefreshTokenService;
-import com.assignment.login.loginfail.service.LoginFailService;
+import com.assignment.login.auth.util.JwtTokenUtil;
+import com.assignment.login.auth.domain.RefreshToken;
+import com.assignment.login.auth.repository.RefreshTokenRepository;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;

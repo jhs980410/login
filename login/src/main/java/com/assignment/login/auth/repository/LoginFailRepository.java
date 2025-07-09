@@ -1,6 +1,6 @@
-package com.assignment.login.loginfail.repository;
+package com.assignment.login.auth.repository;
 
-import com.assignment.login.loginfail.domain.LoginFail;
+import com.assignment.login.auth.domain.LoginFail;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

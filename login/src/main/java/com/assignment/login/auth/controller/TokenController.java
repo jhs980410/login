@@ -1,8 +1,8 @@
-package com.assignment.login.jwt.controller;
+package com.assignment.login.auth.controller;
 
-import com.assignment.login.jwt.JwtTokenUtil;
-import com.assignment.login.jwt.domain.RefreshToken;
-import com.assignment.login.jwt.service.RefreshTokenService;
+import com.assignment.login.auth.util.JwtTokenUtil;
+import com.assignment.login.auth.domain.RefreshToken;
+import com.assignment.login.auth.service.RefreshTokenService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;

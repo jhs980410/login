@@ -1,6 +1,6 @@
 package com.assignment.login.auth.handler;
 
-import com.assignment.login.jwt.JwtTokenUtil;
+import com.assignment.login.auth.util.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,7 @@
-package com.assignment.login.auth.service;
+package com.assignment.login.auth.security;
 
-import com.assignment.login.loginfail.domain.LoginFail;
+import com.assignment.login.auth.domain.LoginFail;
 import com.assignment.login.member.domain.Member;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

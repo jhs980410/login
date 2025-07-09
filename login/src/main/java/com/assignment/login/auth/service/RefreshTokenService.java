@@ -1,7 +1,7 @@
-package com.assignment.login.jwt.service;
+package com.assignment.login.auth.service;
 
-import com.assignment.login.jwt.domain.RefreshToken;
-import com.assignment.login.jwt.repository.RefreshTokenRepository;
+import com.assignment.login.auth.domain.RefreshToken;
+import com.assignment.login.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

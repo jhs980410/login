@@ -11,7 +11,7 @@ CREATE TABLE user (
                       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-
+ALTER TABLE user ADD COLUMN provider_id VARCHAR(255) DEFAULT NULL;
 CREATE TABLE login_fail (
                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
                             user_id BIGINT,

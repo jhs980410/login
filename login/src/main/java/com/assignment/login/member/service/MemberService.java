@@ -4,7 +4,6 @@ import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.dto.MemberSignupRequest;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +19,9 @@ public class MemberService {
         }
         if (existsByNickname(request.getNickname())) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());

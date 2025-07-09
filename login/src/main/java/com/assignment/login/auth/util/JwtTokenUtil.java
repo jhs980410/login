@@ -1,15 +1,11 @@
-package com.assignment.login.jwt;
+package com.assignment.login.auth.util;
 
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.*;
 import java.util.Date;

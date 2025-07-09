@@ -1,4 +1,4 @@
-package com.assignment.login.loginfail.domain;
+package com.assignment.login.auth.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;

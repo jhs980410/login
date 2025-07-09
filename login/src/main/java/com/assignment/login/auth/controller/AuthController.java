@@ -2,13 +2,11 @@ package com.assignment.login.auth.controller;
 
 import com.assignment.login.auth.dto.LoginRequest;
 import com.assignment.login.auth.service.AuthService;
-import com.assignment.login.jwt.JwtTokenUtil;
-import com.assignment.login.jwt.domain.RefreshToken;
-import com.assignment.login.jwt.repository.RefreshTokenRepository;
-import com.assignment.login.jwt.service.RefreshTokenService;
-import com.assignment.login.loginfail.domain.LoginFail;
-import com.assignment.login.loginfail.repository.LoginFailRepository;
-import com.assignment.login.loginfail.service.LoginFailService;
+import com.assignment.login.auth.util.JwtTokenUtil;
+import com.assignment.login.auth.service.RefreshTokenService;
+import com.assignment.login.auth.domain.LoginFail;
+import com.assignment.login.auth.repository.LoginFailRepository;
+import com.assignment.login.auth.service.LoginFailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,14 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor

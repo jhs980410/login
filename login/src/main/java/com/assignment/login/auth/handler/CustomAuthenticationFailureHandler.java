@@ -1,7 +1,7 @@
 package com.assignment.login.auth.handler;
 
-import com.assignment.login.loginfail.repository.LoginFailRepository;
-import com.assignment.login.loginfail.service.LoginFailService;
+import com.assignment.login.auth.repository.LoginFailRepository;
+import com.assignment.login.auth.service.LoginFailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import jakarta.servlet.ServletException;

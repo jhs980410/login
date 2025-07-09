@@ -1,6 +1,6 @@
-package com.assignment.login.jwt.repository;
+package com.assignment.login.auth.repository;
 
-import com.assignment.login.jwt.domain.RefreshToken;
+import com.assignment.login.auth.domain.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

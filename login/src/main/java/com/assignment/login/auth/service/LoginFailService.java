@@ -1,7 +1,7 @@
-package com.assignment.login.loginfail.service;
+package com.assignment.login.auth.service;
 
-import com.assignment.login.loginfail.domain.LoginFail;
-import com.assignment.login.loginfail.repository.LoginFailRepository;
+import com.assignment.login.auth.domain.LoginFail;
+import com.assignment.login.auth.repository.LoginFailRepository;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

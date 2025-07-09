@@ -1,6 +1,5 @@
-package com.assignment.login.jwt;
+package com.assignment.login.auth.util;
 
-import java.io.ByteArrayInputStream;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.PrivateKey;

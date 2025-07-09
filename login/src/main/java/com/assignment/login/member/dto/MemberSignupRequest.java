@@ -9,6 +9,7 @@ import lombok.Setter;
 public class MemberSignupRequest {
     private String email;
     private String password;
+    private String confirmPassword;
     private String nickname;
 
     public Member toEntity(String encodedPassword) {
