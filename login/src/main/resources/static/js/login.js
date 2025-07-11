@@ -157,3 +157,65 @@ document.addEventListener("DOMContentLoaded", () => {
         errorMsg.style.display = "block";
     }
 });
+// ✅ 로그인 요청 함수
+async function handleLogin() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // ✅ 1. 토큰 저장 (localStorage 등)
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
+            // ✅ 2. SweetAlert2 알림 표시
+            Swal.fire({
+                title: "로그인 성공 🎉",
+                text: "잠시 후 홈으로 이동합니다.",
+                icon: "success",
+                timer: 2500,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            }).then(() => {
+                // ✅ 3. 페이지 이동
+                window.location.href = "/home";
+            });
+
+        } else {
+            Swal.fire("로그인 실패", data.message || "이메일/비밀번호를 확인하세요", "error");
+        }
+
+    } catch (err) {
+        Swal.fire("오류 발생", "서버와 통신 중 문제가 발생했습니다.", "error");
+    }
+}
+
+//  로그인 버튼 연결
+document.getElementById("login-btn").addEventListener("click", handleLogin);
+
+function handleGoogleLogin() {
+    Swal.fire({
+        title: "구글 로그인 중...",
+        text: "잠시만 기다려주세요.",
+        icon: "info",
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // 약간의 UX 여유 후 리디렉션
+    setTimeout(() => {
+        window.location.href = "/home";
+    }, 1000);
+}

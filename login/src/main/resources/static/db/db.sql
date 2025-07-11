@@ -11,6 +11,10 @@ CREATE TABLE user (
                       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE user
+    ADD COLUMN provider_id VARCHAR(255) DEFAULT NULL;
+
+
 ALTER TABLE user ADD COLUMN provider_id VARCHAR(255) DEFAULT NULL;
 CREATE TABLE login_fail (
                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -30,9 +34,11 @@ CREATE TABLE remember_token (
                                 ip_address VARCHAR(45),
                                 FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
 ALTER TABLE remember_token
     ADD COLUMN auto_login BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE remember_token MODIFY token VARCHAR(2048);
+
 CREATE TABLE email_token (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              user_id BIGINT NOT NULL,

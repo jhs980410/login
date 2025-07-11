@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {
@@ -39,4 +41,12 @@ public class MemberService {
         return memberRepository.existsByNickname(nickname);
     }
 
+
+    public Optional<Member> findByProviderId(String providerId) {
+        return memberRepository.findByProviderId(providerId);
+    }
+
+    public Member save(Member member) {
+        return memberRepository.save(member);
+    }
 }

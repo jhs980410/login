@@ -2,6 +2,7 @@ package com.assignment.login.auth.security;
 
 import com.assignment.login.auth.handler.CustomAuthenticationFailureHandler;
 import com.assignment.login.auth.handler.CustomAuthenticationSuccessHandler;
+import com.assignment.login.auth.oauth2.handler.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,9 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomUserDetailsService customUserDetailsService;
-    private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
-    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -46,9 +45,14 @@ public class SecurityConfig {
                                 "/api/members/check-email",
                                 "/api/members/check-nickname",
                                 "/css/**", "/js/**", "/images/**",
-                                "/", "/home", "/error/**"
+                                "/", "/home", "/error/**","/oauth2/**", "/login/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
+                ) .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("/home", true)  // ✅ 로그인 성공 시 무조건 /home으로 이동
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureUrl("/member/loginPage?error") // 실패 시 이동할 URL
+
                 );
 
 

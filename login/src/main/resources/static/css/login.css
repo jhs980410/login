@@ -792,7 +792,6 @@ input::placeholder {
 }
 .help-action {
 
-    padding: .4em 0 0;
     font-size: .93em;
     color: #bbb;
 }
@@ -842,4 +841,33 @@ input, textarea, button, select {
 
 .btn{
     padding: 1em 3em;
+}
+
+
+.section-login-btn {
+    display: flex;
+    align-items: center;     /* 수직 정렬 맞춤 */
+    gap: 16px;               /* 버튼과 비밀번호 찾기 간격 조정 (원하는 값으로 조절 가능) */
+}
+
+.section-login-btn .help-action {
+    margin: 0;               /* 기본 마진 제거 */
+}
+
+.section-login-btn .help-action p {
+    margin: 0;
+    display: flex;
+    align-items: center;     /* 아이콘과 텍스트 정렬 */
+}
+
+.section-login-btn .forgot {
+    margin-left: 6px;        /* 아이콘과 텍스트 사이 여백 */
+    color: #ccc;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.custom-google-btn {
+    cursor: pointer;
 }

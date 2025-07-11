@@ -1,6 +1,7 @@
 package com.assignment.login.auth.security;
 
 import com.assignment.login.auth.oauth2.userinfo.OAuth2UserInfo;
+import com.assignment.login.member.domain.Member;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -13,12 +14,16 @@ public class CustomOAuth2User implements OAuth2User {
 
     private final OAuth2UserInfo userInfo;
     private final Map<String, Object> attributes;
-
-    public CustomOAuth2User(OAuth2UserInfo userInfo, Map<String, Object> attributes) {
+    private final Member member;
+    public CustomOAuth2User(OAuth2UserInfo userInfo, Map<String, Object> attributes, Member member) {
         this.userInfo = userInfo;
         this.attributes = attributes;
+        this.member = member;
     }
 
+    public Member getMember() {
+        return member;
+    }
     @Override
     public Map<String, Object> getAttributes() {
         return attributes;

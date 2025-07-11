@@ -1,6 +1,7 @@
 package com.assignment.login.member.domain;
 
 
+import com.assignment.login.member.domain.enums.LoginType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,8 +26,9 @@ public class Member {
     @Column(nullable = false, unique = true, length = 50)
     private String nickname;
 
-    @Column(name = "login_type", nullable = false)
-    private String loginType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "login_type")
+    private LoginType loginType;
 
     @Column(name = "is_locked", nullable = false)
     private boolean isLocked;
@@ -36,6 +38,13 @@ public class Member {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "profile_image")
+    private String profileImage; // 선택 사항
+
 
     @PrePersist
     protected void onCreate() {

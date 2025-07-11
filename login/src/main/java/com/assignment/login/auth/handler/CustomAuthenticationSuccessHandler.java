@@ -14,7 +14,7 @@ import java.io.IOException;
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtTokenUtil jwtTokenUtil;
-    //토큰발급처
+    //폼로그인용 토큰발급처
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,

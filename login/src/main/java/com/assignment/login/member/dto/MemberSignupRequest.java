@@ -1,6 +1,7 @@
 package com.assignment.login.member.dto;
 
 import com.assignment.login.member.domain.Member;
+import com.assignment.login.member.domain.enums.LoginType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +18,7 @@ public class MemberSignupRequest {
         member.setEmail(email);
         member.setNickname(nickname);
         member.setPassword(encodedPassword); // 암호화된 비밀번호 전달
-        member.setLoginType("LOCAL");
+        member.setLoginType(LoginType.LOCAL);
         return member;
     }
 

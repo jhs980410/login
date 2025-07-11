@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.io.InputStream;
 import java.security.*;
 import java.security.spec.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Slf4j
@@ -76,6 +77,11 @@ public class JwtTokenUtil {
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
+    //오버로딩처리
+    public String generateRefreshToken(String email) {
+        return generateRefreshToken(email, false); // 기본은 자동 로그인 false
+    }
+
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(publicKey)
@@ -93,5 +99,9 @@ public class JwtTokenUtil {
             log.warn("JWT 검증 실패: {}", e.getMessage());
             return false;
         }
+    }
+
+    public LocalDateTime getRefreshTokenExpiryDate() {
+        return LocalDateTime.now().plusDays(2);
     }
 }

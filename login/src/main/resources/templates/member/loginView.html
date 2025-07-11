@@ -7,6 +7,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/css/login.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
 
@@ -96,6 +98,7 @@
             <div class="form-wrap">
                 <!-- TABS -->
                 <div class="tabs">
+
                     <h3 class="login-tab"><a class="log-in active" href="#login-tab-content"><span>로그인</span></a></h3>
                     <h3 class="signup-tab"><a class="sign-up" href="#signup-tab-content"><span>회원가입</span></a></h3>
 
@@ -121,12 +124,19 @@
                             <input type="checkbox" class="checkbox" id="remember_me" name="remember_me">
                             <label for="remember_me">자동 로그인</label>
 
-                            <button type="submit" class="button btn">로그인</button>
+                            <div class="section-login-btn">
+                                <button type="submit" class="button btn">로그인</button>
+
+                                <div class="help-action">
+                                    <p><i class="fa fa-arrow-left" aria-hidden="true"></i><a class="forgot" href="#">비밀번호 찾기</a></p>
+                                </div>
+                            </div>
+
+                            <div class="custom-google-btn" onclick="handleGoogleLogin()">
+                                <img src="/images/web_light_rd_SU@1x.png" alt="Google 로그인 버튼" style="height: 40px;">
+                            </div>
                         </form>
 
-                        <div class="help-action">
-                            <p><i class="fa fa-arrow-left" aria-hidden="true"></i><a class="forgot" href="#">비밀번호 찾기</a></p>
-                        </div>
                     </div>
                     <!-- 회원가입 -->
                     <div id="signup-tab-content">
