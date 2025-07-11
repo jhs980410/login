@@ -3,7 +3,10 @@ package com.assignment.login.auth.security;
 import com.assignment.login.auth.handler.CustomAuthenticationFailureHandler;
 import com.assignment.login.auth.handler.CustomAuthenticationSuccessHandler;
 import com.assignment.login.auth.oauth2.handler.OAuth2SuccessHandler;
+import com.assignment.login.auth.oauth2.service.CustomOAuth2UserService;
+import com.assignment.login.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,9 +16,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -24,13 +29,16 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
+    //  필드 주입 X
+    //  직접 메서드 호출해서 Bean
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, OAuth2UserService<OAuth2UserRequest, OAuth2User> customOAuth2UserService) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
@@ -40,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/logout",
+                                "/api/auth/redirect",
+                                "/redirect.html",
                                 "/member/loginPage",
                                 "/member/signup",
                                 "/api/members/check-email",
@@ -48,24 +58,29 @@ public class SecurityConfig {
                                 "/", "/home", "/error/**","/oauth2/**", "/login/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
-                ) .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/home", true)  // ✅ 로그인 성공 시 무조건 /home으로 이동
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService) //  수동 Bean 호출로 주입
+                        )
                         .successHandler(oAuth2SuccessHandler)
-                        .failureUrl("/member/loginPage?error") // 실패 시 이동할 URL
-
+                        .failureUrl("/member/loginPage?error")
                 );
 
-
-        //  JWT 인증 필터 등록
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
+    //  이 Bean 등록은 유지하되, 위에서 메서드 인자로 받아야 함
+    @Bean
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> customOAuth2UserService(MemberService memberService) {
+        return new CustomOAuth2UserService(memberService);
+    }
 
-    //  AuthenticationManager 등록 (로그인에 필요)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }
+
+

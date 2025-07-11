@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-@Service
+
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 

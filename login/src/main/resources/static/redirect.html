@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>소셜 로그인 처리 중...</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get("accessToken");
+        const refreshToken = params.get("refreshToken");
+
+        if (accessToken && refreshToken) {
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", refreshToken);
+            localStorage.setItem("isSocial", "true");
+            Swal.fire({
+                title: "로그인 성공 🎉",
+                text: "잠시 후 홈으로 이동합니다.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            }).then(() => {
+                window.location.href = "/home";
+            });
+        } else {
+            Swal.fire("로그인 실패", "토큰 정보가 유효하지 않습니다.", "error");
+        }
+    });
+</script>
+</body>
+</html>

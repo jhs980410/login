@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const logoutBtn = document.getElementById("logout-btn");
+
     logoutBtn.addEventListener("click", async () => {
-        const refreshToken = localStorage.getItem("refreshToken"); // 자동 로그인용 토큰
+        const refreshToken = localStorage.getItem("refreshToken");
+        const isSocial = localStorage.getItem("isSocial") === "true";
 
         try {
             if (refreshToken) {
@@ -17,11 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("로그아웃 중 오류 발생:", error);
         }
 
-        // 클라이언트 저장 토큰 제거
-        localStorage.removeItem("jwt");
+        // 로컬 토큰 삭제
+        localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("isSocial");
 
-        // 로그인 페이지로 이동
+        // 홈 또는 로그인 페이지로 이동
         window.location.href = "/member/loginPage";
     });
 });

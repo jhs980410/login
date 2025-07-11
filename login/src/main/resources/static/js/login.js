@@ -107,13 +107,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const email = document.getElementById("user_login").value.trim();
         const password = document.getElementById("user_password").value.trim();
-        const autoLogin = document.getElementById('remember_me').checked;
+        const autoLogin = document.getElementById("remember_me").checked;
+
         fetch("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email, password,autoLogin })
+            body: JSON.stringify({ email, password, autoLogin })
         })
             .then(async res => {
                 const status = res.status;
@@ -123,17 +124,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (data.accessToken && data.refreshToken) {
                         localStorage.setItem("accessToken", data.accessToken);
                         localStorage.setItem("refreshToken", data.refreshToken);
-                        window.location.href = "/home";
+                        localStorage.setItem("isSocial", "false");
+                        Swal.fire({
+                            title: "로그인 성공 🎉",
+                            text: "잠시 후 홈으로 이동합니다.",
+                            icon: "success",
+                            timer: 2000,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        }).then(() => {
+                            window.location.href = "/home";
+                        });
                     } else {
                         showError("로그인에 실패했습니다.");
                     }
-                } else if (status === 401 || status === 423) {
-                    // ✅ 실패 메시지 받아오기
+                } else {
                     const data = await res.json().catch(() => ({}));
                     const message = data.message || "로그인에 실패했습니다.";
                     showError(message);
-                } else {
-                    showError("알 수 없는 오류가 발생했습니다.");
                 }
             })
             .catch(err => {
@@ -141,69 +151,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 showError("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             });
 
-// 에러 메시지 표시 함수
         function showError(msg) {
             const errorMsg = document.getElementById("error-message");
             errorMsg.textContent = msg;
             errorMsg.style.display = "block";
         }
-
     });
+});
 
-    // 에러 메시지 표시 함수
-    function showError(message) {
-        const errorMsg = document.getElementById("error-message");
-        errorMsg.textContent = message;
-        errorMsg.style.display = "block";
+
+
+//구글로그인 모달 //
+document.addEventListener("DOMContentLoaded", () => {
+    const googleBtn = document.getElementsByClassName("custom-google-btn")[0]; // 첫 번째 요소만 선택
+
+    if (googleBtn) {
+        googleBtn.addEventListener("click", () => {
+            showOAuthLoading(); // 로딩 모달 먼저
+            setTimeout(() => {
+                window.location.href = "/oauth2/authorization/google"; // 리다이렉션
+            }, 800); // UX를 위한 약간의 대기
+        });
     }
 });
-// ✅ 로그인 요청 함수
-async function handleLogin() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
 
-    try {
-        const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            // ✅ 1. 토큰 저장 (localStorage 등)
-            localStorage.setItem("accessToken", data.accessToken);
-            localStorage.setItem("refreshToken", data.refreshToken);
-
-            // ✅ 2. SweetAlert2 알림 표시
-            Swal.fire({
-                title: "로그인 성공 🎉",
-                text: "잠시 후 홈으로 이동합니다.",
-                icon: "success",
-                timer: 2500,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            }).then(() => {
-                // ✅ 3. 페이지 이동
-                window.location.href = "/home";
-            });
-
-        } else {
-            Swal.fire("로그인 실패", data.message || "이메일/비밀번호를 확인하세요", "error");
-        }
-
-    } catch (err) {
-        Swal.fire("오류 발생", "서버와 통신 중 문제가 발생했습니다.", "error");
-    }
-}
-
-//  로그인 버튼 연결
-document.getElementById("login-btn").addEventListener("click", handleLogin);
-
-function handleGoogleLogin() {
+function showOAuthLoading() {
     Swal.fire({
         title: "구글 로그인 중...",
         text: "잠시만 기다려주세요.",
@@ -213,9 +185,4 @@ function handleGoogleLogin() {
             Swal.showLoading();
         }
     });
-
-    // 약간의 UX 여유 후 리디렉션
-    setTimeout(() => {
-        window.location.href = "/home";
-    }, 1000);
 }

@@ -1,6 +1,7 @@
 package com.assignment.login.auth.oauth2.handler;
 
 import com.assignment.login.auth.domain.RefreshToken;
+import com.assignment.login.auth.oauth2.service.RememberTokenService;
 import com.assignment.login.auth.repository.RefreshTokenRepository;
 import com.assignment.login.auth.security.CustomOAuth2User;
 import com.assignment.login.auth.util.JwtTokenUtil;
@@ -16,50 +17,50 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
-@Transactional
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtTokenUtil jwtTokenUtil;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final ObjectMapper objectMapper;
+    private final RememberTokenService rememberTokenService;
+
 
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                        Authentication authentication) throws IOException, ServletException {
+        System.out.println(" SuccessHandler 호출됨");
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+
         Long userId = oAuth2User.getMember().getId();
         String email = oAuth2User.getMember().getEmail();
 
-        // 1. 토큰 발급
+        // 토큰 발급
         String accessToken = jwtTokenUtil.generateToken(email);
-        String refreshToken = jwtTokenUtil.generateRefreshToken(email); // 예: 유효기간 14일
+        String refreshToken = jwtTokenUtil.generateRefreshToken(email);
+        LocalDateTime refreshExp = jwtTokenUtil.getRefreshTokenExpiryDate();
+        System.out.println("🔍 [DEBUG] OAuth2 로그인 성공 후 토큰 저장 시작");
+        System.out.println("🔑 userId: " + userId);
+        System.out.println("🔑 refreshToken: " + refreshToken);
+        System.out.println("🔑 refreshExp: " + refreshExp);
+        System.out.println("🔑 userAgent: " + request.getHeader("User-Agent"));
+        System.out.println("🔑 ipAddress: " + request.getRemoteAddr());
 
-        // 2. RefreshToken DB 저장 (userId 기준 중복 제거 후 저장)
-        refreshTokenRepository.deleteByUserId(userId); // 기존 토큰 삭제 (선택)
-        refreshTokenRepository.save(
-                RefreshToken.builder()
-                        .userId(userId)
-                        .token(refreshToken)
-                        .expiredAt(jwtTokenUtil.getRefreshTokenExpiryDate())
-                        .autoLogin(false) // 명시
-                        .userAgent(request.getHeader("User-Agent")) // 브라우저 정보
-                        .ipAddress(request.getRemoteAddr()) // IP 주소
-                        .build()
+        //  별도 트랜잭션 서비스로 토큰 저장
+        rememberTokenService.saveRefreshToken(
+                userId,
+                refreshToken,
+                refreshExp,
+                request.getHeader("User-Agent"),
+                request.getRemoteAddr(),
+                false // 소셜 로그인은 auto_login = 0
         );
-        log.info("🔐 RefreshToken 저장 완료 - userId: {}, refreshToken: {}", userId, refreshToken);
-        // 3. 응답 반환
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(
-                Map.of(
-                        "status", "success",
-                        "accessToken", accessToken,
-                        "refreshToken", refreshToken
-                )
-        ));
 
+        // 응답
+        String redirectUrl = String.format("/redirect.html?accessToken=%s&refreshToken=%s", accessToken, refreshToken);
+        response.sendRedirect(redirectUrl);
     }
 }

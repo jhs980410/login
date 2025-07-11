@@ -26,13 +26,9 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenUtil jwtTokenUtil;
-
     private final MemberRepository memberRepository;
     private final LoginFailRepository loginFailRepository;
 
-    private final RefreshTokenService refreshTokenService;
     private final AuthService authService;
     private final LoginFailService loginFailService;
 
@@ -71,10 +67,18 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody Map<String, String> payload) {
         String refreshToken = payload.get("refreshToken");
+        System.out.println("logout: " + refreshToken);
         authService.logout(refreshToken);
         return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
     }
 
 
+    @GetMapping("/redirect")
+    public ResponseEntity<?> oauth2RedirectPage() {
+        // 토큰은 SuccessHandler에서 localStorage에 이미 저장된 상태
+        // 이 페이지는 JS로 /home 이동을 수행
+
+        return ResponseEntity.ok().build(); // 또는 뷰 리턴
+    }
 
 }

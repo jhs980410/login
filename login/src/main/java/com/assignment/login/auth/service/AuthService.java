@@ -25,7 +25,6 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginFailService loginFailService;
-    private final RefreshTokenService refreshTokenService;
     public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) {
         //  인증 시도
         Authentication authentication = authenticationManager.authenticate(
@@ -67,19 +66,23 @@ public class AuthService {
     @Transactional
     public void logout(String refreshToken) {
         if (refreshToken == null || !jwtTokenUtil.validateToken(refreshToken)) {
-            return; // 유효하지 않은 토큰이면 아무것도 하지 않음
+            return;
         }
 
-        Optional<RefreshToken> tokenOpt = refreshTokenRepository.findByToken(refreshToken);
-        if (tokenOpt.isPresent()) {
-            String email = jwtTokenUtil.getEmailFromToken(refreshToken);
-            Long userId = memberRepository.findByEmail(email).orElseThrow().getId();
+        String email = jwtTokenUtil.getEmailFromToken(refreshToken);
+        Long userId = memberRepository.findByEmail(email).orElseThrow().getId();
 
-            // 토큰 소유자가   맞을 경우에만 삭제
+        Optional<RefreshToken> tokenOpt = refreshTokenRepository.findByToken(refreshToken);
+
+        if (tokenOpt.isPresent()) {
             if (tokenOpt.get().getUserId().equals(userId)) {
                 refreshTokenRepository.delete(tokenOpt.get());
             }
+        } else {
+            // ✅ 토큰이 저장되지 않은 상태에서 로그아웃 시도된 경우를 위한 보완
+            refreshTokenRepository.deleteByUserId(userId);  // fallback
         }
     }
+
 
 }
