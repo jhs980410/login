@@ -2,6 +2,7 @@ package com.assignment.login.auth.security;
 
 import com.assignment.login.auth.handler.CustomAuthenticationFailureHandler;
 import com.assignment.login.auth.handler.CustomAuthenticationSuccessHandler;
+import com.assignment.login.auth.oauth2.handler.OAuth2FailureHandler;
 import com.assignment.login.auth.oauth2.handler.OAuth2SuccessHandler;
 import com.assignment.login.auth.oauth2.service.CustomOAuth2UserService;
 import com.assignment.login.member.service.MemberService;
@@ -28,7 +29,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-
+    private final OAuth2FailureHandler oAuth2FailureHandler;
     //  필드 주입 X
     //  직접 메서드 호출해서 Bean
 
@@ -49,7 +50,9 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/logout",
                                 "/api/auth/redirect",
+                                "/link/account",
                                 "/redirect.html",
+                                "linkAccount.html",
                                 "/member/loginPage",
                                 "/member/signup",
                                 "/api/members/check-email",
@@ -64,7 +67,7 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService) //  수동 Bean 호출로 주입
                         )
                         .successHandler(oAuth2SuccessHandler)
-                        .failureUrl("/member/loginPage?error")
+                        .failureHandler(oAuth2FailureHandler)
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

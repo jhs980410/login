@@ -49,4 +49,12 @@ public class MemberService {
     public Member save(Member member) {
         return memberRepository.save(member);
     }
+
+    public Optional<Member> findByEmail(String email) {
+        return memberRepository.findByEmail(email);
+    }
+
+    public void update(Member member) {
+        memberRepository.save(member);
+    }
 }

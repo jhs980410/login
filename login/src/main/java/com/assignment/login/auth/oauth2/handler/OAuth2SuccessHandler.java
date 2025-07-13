@@ -34,7 +34,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication) throws IOException, ServletException {
         System.out.println(" SuccessHandler 호출됨");
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        if (oAuth2User.getMember().getLoginType().name().equalsIgnoreCase("LOCAL")) {
+            String email = oAuth2User.getMember().getEmail();
+            String loginType = oAuth2User.getUserInfo().getProvider().toLowerCase(); // "kakao", "google" 등
+            String redirectUrl = "/link/account?email=" + email + "&type=" + loginType;
 
+            log.warn("⚠️ 연동 필요 사용자. Redirecting to {}", redirectUrl);
+            response.sendRedirect(redirectUrl);
+            return;
+        }
         Long userId = oAuth2User.getMember().getId();
         String email = oAuth2User.getMember().getEmail();
 
@@ -61,6 +69,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         // 응답
         String redirectUrl = String.format("/redirect.html?accessToken=%s&refreshToken=%s", accessToken, refreshToken);
+        log.info(" 소셜 로그인 성공. Redirecting to {}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 }

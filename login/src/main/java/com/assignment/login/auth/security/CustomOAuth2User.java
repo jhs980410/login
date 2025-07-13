@@ -38,5 +38,14 @@ public class CustomOAuth2User implements OAuth2User {
     public String getName() {
         return userInfo.getProviderId(); // 유저 식별자 (ex. sub, id, sns 고유키)
     }
+
+    public String getEmail() {
+        return userInfo.getEmail();
+    }
+
+
+    public OAuth2UserInfo getUserInfo() {
+        return userInfo;
+    }
 }
 

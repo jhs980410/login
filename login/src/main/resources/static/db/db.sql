@@ -12,7 +12,7 @@ CREATE TABLE user (
 );
 ALTER TABLE user DROP INDEX email;
 ALTER TABLE user ADD UNIQUE KEY uq_user_email_type (email, login_type);
-
+ALTER TABLE user ADD UNIQUE KEY uq_provider (provider_id, login_type);
 ALTER TABLE user
     ADD COLUMN provider_id VARCHAR(255) DEFAULT NULL;
 

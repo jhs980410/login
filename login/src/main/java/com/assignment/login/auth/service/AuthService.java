@@ -4,6 +4,7 @@ import com.assignment.login.auth.dto.LoginRequest;
 import com.assignment.login.auth.util.JwtTokenUtil;
 import com.assignment.login.auth.domain.RefreshToken;
 import com.assignment.login.auth.repository.RefreshTokenRepository;
+import com.assignment.login.common.service.CommonService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginFailService loginFailService;
+    private final CommonService commonService;
     public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) {
         //  인증 시도
         Authentication authentication = authenticationManager.authenticate(
@@ -79,10 +82,22 @@ public class AuthService {
                 refreshTokenRepository.delete(tokenOpt.get());
             }
         } else {
-            // ✅ 토큰이 저장되지 않은 상태에서 로그아웃 시도된 경우를 위한 보완
+            // 토큰이 저장되지 않은 상태에서 로그아웃 시도된 경우를 위한 보완
             refreshTokenRepository.deleteByUserId(userId);  // fallback
         }
     }
 
 
+    public String generateAndSendCode(String email) {
+        String code = String.valueOf(new Random().nextInt(899999) + 100000); // 6자리
+        commonService.put(email, code);
+        // 이메일 전송 로직 (메일 API 연동 필요)
+        System.out.println("[" + email + "] 인증코드: " + code);
+        return code;
+    }
+
+    public boolean verifyCode(String email, String inputCode) {
+        String stored = commonService.get(email);
+        return stored != null && stored.equals(inputCode);
+    }
 }
