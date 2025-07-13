@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/css/login.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
 <body>
@@ -128,13 +129,27 @@
                                 <button type="submit" class="button btn">로그인</button>
 
                                 <div class="help-action">
-                                    <p><i class="fa fa-arrow-left" aria-hidden="true"></i><a class="forgot" href="#">비밀번호 찾기</a></p>
+                                    <p></i><a class="forgot" href="#">비밀번호 찾기</a></p>
                                 </div>
                             </div>
+                            <div class="center-wrapper">
+                                <div class="social-login-wrapper">
+                                    <a href="/oauth2/authorization/google" class="social-btn google">
+                                        <i class="fab fa-google icon"></i>
+                                        Google 계정으로 로그인
+                                    </a>
+                                    <a href="/oauth2/authorization/kakao" class="social-btn kakao">
+                                        <i class="fas fa-comment icon" style="color: #3c1e1e;"></i>
+                                        Kakao 계정으로 로그인
+                                    </a>
+                                    <a href="/oauth2/authorization/naver" class="social-btn naver">
+                                        <img src="/images/naver-icon-white.png" class="icon" alt="Naver">
+                                        Naver 계정으로 로그인
+                                    </a>
+                                </div>
 
-                            <a href="/oauth2/authorization/google" class="custom-google-btn">
-                                <img src="/images/web_light_rd_SU@1x.png" alt="Google 로그인 버튼" style="height: 40px;">
-                            </a>
+
+                            </div>
                         </form>
 
                     </div>
@@ -163,7 +178,7 @@
 
                                 <div class="agree-container">
                                     <p>
-                                        <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                                       
                                         <a class="agree" href="#">서비스 약관보기</a>
                                     </p>
                                     <div class="agree-line">

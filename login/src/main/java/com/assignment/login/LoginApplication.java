@@ -26,4 +26,14 @@ public class LoginApplication {
         System.out.println("GOOGLE_CLIENT_ID = " + System.getenv("GOOGLE_CLIENT_ID"));
     }
 
+
+    @PostConstruct
+    public void checkEnv2() {
+        System.out.println("KAKAO_CLIENT_ID = " + System.getenv("KAKAO_CLIENT_ID"));
+    }
+
+    @PostConstruct
+    public void checkEnv3() {
+        System.out.println("NAVER_CLIENT_ID = " + System.getenv("NAVER_CLIENT_ID"));
+    }
 }

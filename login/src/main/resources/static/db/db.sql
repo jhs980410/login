@@ -10,6 +10,8 @@ CREATE TABLE user (
                       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+ALTER TABLE user DROP INDEX email;
+ALTER TABLE user ADD UNIQUE KEY uq_user_email_type (email, login_type);
 
 ALTER TABLE user
     ADD COLUMN provider_id VARCHAR(255) DEFAULT NULL;
