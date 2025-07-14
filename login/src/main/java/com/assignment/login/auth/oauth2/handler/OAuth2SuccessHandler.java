@@ -36,9 +36,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
         if (oAuth2User.getMember().getLoginType().name().equalsIgnoreCase("LOCAL")) {
             String email = oAuth2User.getMember().getEmail();
-            String loginType = oAuth2User.getUserInfo().getProvider().toLowerCase(); // "kakao", "google" 등
-            String redirectUrl = "/link/account?email=" + email + "&type=" + loginType;
+            String loginType = oAuth2User.getUserInfo().getProvider().toLowerCase();
 
+            // ✅ 세션에 providerId와 profileImage 저장
+            request.getSession().setAttribute("providerId", oAuth2User.getUserInfo().getProviderId());
+            request.getSession().setAttribute("profileImage", oAuth2User.getUserInfo().getProfileImage());
+            request.getSession().setAttribute("loginType", loginType);
+            request.getSession().setAttribute("linkAccountEmail", email);
+
+            String redirectUrl = "/link/account?email=" + email + "&type=" + loginType;
             log.warn("⚠️ 연동 필요 사용자. Redirecting to {}", redirectUrl);
             response.sendRedirect(redirectUrl);
             return;

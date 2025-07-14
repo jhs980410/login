@@ -1,0 +1,27 @@
+body {
+    font-family: sans-serif;
+    padding: 40px;
+    background-color: #f4f4f4;
+}
+
+.confirm-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    margin: auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 15px;
+    margin-right: 10px;
+}

@@ -3,6 +3,7 @@ package com.assignment.login.auth.service;
 import com.assignment.login.auth.domain.LoginFail;
 import com.assignment.login.auth.repository.LoginFailRepository;
 import com.assignment.login.member.domain.Member;
+import com.assignment.login.member.domain.enums.LoginType;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +19,14 @@ public class LoginFailService {
     private final LoginFailRepository loginFailRepository;
     private final MemberRepository memberRepository;
 
-    // 로그인 실패 기록 (Member 객체 기반)
 
     public void recordFail(Member member) {
+        if (!member.getLoginType().equals(LoginType.LOCAL)) {
+            return;
+        } //소셜일경우 return
+
+        // 로그인 실패 기록 (Member 객체 기반)
+
         LoginFail fail = loginFailRepository.findByUserId(member.getId())
                 .orElseGet(() -> createNewFail(member.getId()));
 

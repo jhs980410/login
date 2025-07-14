@@ -27,4 +27,9 @@ public class AppleOAuth2UserInfo extends OAuth2UserInfo {
     public String getName() {
         return "Apple User";  // Apple은 이름 제공 안 함. "임의 이름" 설정
     }
+
+    @Override
+    public String getProfileImage() {
+        return "";
+    }
 }

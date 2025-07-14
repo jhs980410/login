@@ -17,4 +17,5 @@ public abstract class OAuth2UserInfo {
     public abstract String getProviderId();    // 각 플랫폼 고유 ID
     public abstract String getEmail();
     public abstract String getName();
+    public abstract String getProfileImage();
 }

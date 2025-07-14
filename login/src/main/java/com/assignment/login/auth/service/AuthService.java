@@ -5,9 +5,11 @@ import com.assignment.login.auth.util.JwtTokenUtil;
 import com.assignment.login.auth.domain.RefreshToken;
 import com.assignment.login.auth.repository.RefreshTokenRepository;
 import com.assignment.login.common.service.CommonService;
+import com.assignment.login.common.service.EmailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final LoginFailService loginFailService;
     private final CommonService commonService;
+    private final EmailService emailService;
+
     public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) {
         //  인증 시도
         Authentication authentication = authenticationManager.authenticate(
@@ -92,6 +96,7 @@ public class AuthService {
         String code = String.valueOf(new Random().nextInt(899999) + 100000); // 6자리
         commonService.put(email, code);
         // 이메일 전송 로직 (메일 API 연동 필요)
+        emailService.sendAuthCode(email, code); // 이메일 전송
         System.out.println("[" + email + "] 인증코드: " + code);
         return code;
     }
@@ -100,4 +105,5 @@ public class AuthService {
         String stored = commonService.get(email);
         return stored != null && stored.equals(inputCode);
     }
+
 }
