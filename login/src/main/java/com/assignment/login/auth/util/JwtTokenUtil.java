@@ -1,8 +1,12 @@
 package com.assignment.login.auth.util;
 
+import com.assignment.login.auth.domain.RefreshToken;
+import com.assignment.login.auth.dto.RefreshTokenPayload;
+import com.assignment.login.auth.service.RefreshTokenService;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -10,16 +14,23 @@ import java.security.*;
 import java.security.spec.*;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class JwtTokenUtil {
 
+    private final RefreshTokenService refreshTokenService;
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private final long EXPIRATION_TIME = 1000 * 60 * 15; // 15분
     private final long REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 2; // 기본 리프레시 2일
     private final long REMEMBER_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 14; // 자동 로그인 14일
+
+    public JwtTokenUtil(RefreshTokenService refreshTokenService) {
+        this.refreshTokenService = refreshTokenService;
+    }
+
     @PostConstruct
     public void loadKeys() {
         try {
@@ -104,4 +115,39 @@ public class JwtTokenUtil {
     public LocalDateTime getRefreshTokenExpiryDate() {
         return LocalDateTime.now().plusDays(2);
     }
+
+    public Optional<RefreshTokenPayload> validateAndGetRefreshToken(String token) {
+        try {
+            Optional<RefreshToken> saved = refreshTokenService.findByToken(token);
+            if (saved.isPresent() && saved.get().getExpiredAt().isAfter(LocalDateTime.now())) {
+                RefreshToken rt = saved.get();
+                String email = getEmailFromToken(token); // 여기!
+                return Optional.of(new RefreshTokenPayload(rt.getUserId(), email, rt.isAutoLogin()));
+            }
+        } catch (Exception e) {
+            log.warn("RefreshToken 검증 중 예외 발생: {}", e.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    public ResponseCookie createAccessTokenCookie(String token) {
+        return ResponseCookie.from("accessToken", token)
+                .httpOnly(true)
+                .secure(false) // 운영 환경에서 true
+                .path("/")
+                .maxAge(15 * 60)
+                .sameSite("Lax")
+                .build();
+    }
+
+    public ResponseCookie createRefreshTokenCookie(String token) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60) // 14일
+                .sameSite("Lax")
+                .build();
+    }
+
 }

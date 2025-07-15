@@ -47,12 +47,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/logout",
-                                "/api/auth/redirect",
-                                "/api/auth/sendCode",
-                                "/api/auth/verifyCode",
-                                "/api/auth/resetPassword",
+                                "/api/auth/**",
                                 "/link/**",
                                 "/redirect.html",
                                 "/linkAccount.html",

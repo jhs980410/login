@@ -10,9 +10,11 @@ import com.assignment.login.member.domain.enums.LoginType;
 import com.assignment.login.member.repository.MemberRepository;
 import com.assignment.login.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +30,6 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final MemberRepository memberRepository;
     private final LoginFailRepository loginFailRepository;
 
     private final AuthService authService;
@@ -40,15 +41,39 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request,
                                    @RequestHeader("User-Agent") String userAgent,
-                                   HttpServletRequest httpRequest) {
+                                   HttpServletRequest httpRequest,
+                                   HttpServletResponse response) {
         try {
             Map<String, String> tokens = authService.login(
                     request, userAgent, httpRequest.getRemoteAddr()
             );
-            return ResponseEntity.ok(tokens);
+
+            //  accessToken 쿠키 설정
+            ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
+                    .httpOnly(true)
+                    .secure(false) // 배포 시 true
+                    .path("/")
+                    .maxAge(15 * 60) // 15분
+                    .sameSite("Lax")
+                    .build();
+
+            //  refreshToken 쿠키 설정
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(14 * 24 * 60 * 60) // 14일
+                    .sameSite("Lax")
+                    .build();
+
+            //  쿠키 응답에 설정
+            response.setHeader("Set-Cookie", accessTokenCookie.toString());
+            response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+            return ResponseEntity.ok(Map.of("message", "로그인 성공"));
 
         } catch (LockedException e) {
-            Member member = memberRepository.findByEmail(request.getEmail()).orElse(null);
+            Member member = memberService.findByEmail(request.getEmail()).orElse(null);
             if (member != null) {
                 LoginFail fail = loginFailRepository.findByUserId(member.getId()).orElse(null);
                 if (fail != null && fail.getLastFailAt() != null) {
@@ -62,7 +87,7 @@ public class AuthController {
                     .body(Map.of("message", "계정이 잠겨 있습니다. 5분 후 다시 시도해 주세요."));
 
         } catch (BadCredentialsException e) {
-            Member member = memberRepository.findByEmail(request.getEmail()).orElse(null);
+            Member member = memberService.findByEmail(request.getEmail()).orElse(null);
 
             // 존재하는 계정일 때만 분기
             if (member != null) {
@@ -74,19 +99,30 @@ public class AuthController {
                 // 로컬 계정인 경우 실패 카운트 증가
                 loginFailService.recordFail(member);
             }
-            // 기본 응답 (비밀번호 틀림 또는 존재하지 않는 이메일)
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "이메일 또는 비밀번호가 일치하지 않습니다."));
         }
     }
+
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody Map<String, String> payload) {
-        String refreshToken = payload.get("refreshToken");
-        System.out.println("logout: " + refreshToken);
-        authService.logout(refreshToken);
+    public ResponseEntity<?> logout(@CookieValue(value = "refreshToken", required = false) String refreshToken,
+                                    HttpServletResponse response) {
+        if (refreshToken != null) {
+            authService.logout(refreshToken); // DB 삭제
+        }
+
+        ResponseCookie accessTokenClear = ResponseCookie.from("accessToken", "")
+                .httpOnly(true).secure(false).path("/").maxAge(0).sameSite("Lax").build();
+
+        ResponseCookie refreshTokenClear = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true).secure(false).path("/").maxAge(0).sameSite("Lax").build();
+
+        response.setHeader("Set-Cookie", accessTokenClear.toString());
+        response.addHeader("Set-Cookie", refreshTokenClear.toString());
+
         return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
     }
-
 
     @GetMapping("/redirect")
     public ResponseEntity<?> oauth2RedirectPage() {
@@ -102,7 +138,7 @@ public class AuthController {
         String email = request.get("email");
 
         // 1. 이메일로 사용자 조회
-        Optional<Member> member = memberRepository.findByEmail(email);
+        Optional<Member> member = memberService.findByEmail(email);
         if (member.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("등록되지 않은 이메일입니다.");
         }

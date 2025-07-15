@@ -69,8 +69,7 @@ $(function () {
     });
 });
 
-
-// 🔹 로그인 요청 처리
+// 🔹 로그인 요청 처리 (쿠키 기반 인증용)
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("login-form");
     if (!form) return;
@@ -85,31 +84,23 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include", // ✅ 쿠키 전송 필수
             body: JSON.stringify({ email, password, autoLogin })
         })
             .then(async res => {
+                const data = await res.json().catch(() => ({}));
                 if (res.status === 200) {
-                    const data = await res.json();
-                    if (data.accessToken && data.refreshToken) {
-                        localStorage.setItem("accessToken", data.accessToken);
-                        localStorage.setItem("refreshToken", data.refreshToken);
-                        localStorage.setItem("isSocial", "false");
-
-                        Swal.fire({
-                            title: "로그인 성공 🎉",
-                            text: "잠시 후 홈으로 이동합니다.",
-                            icon: "success",
-                            timer: 2000,
-                            showConfirmButton: false,
-                            didOpen: () => Swal.showLoading()
-                        }).then(() => {
-                            window.location.href = "/home";
-                        });
-                    } else {
-                        showError("로그인에 실패했습니다.");
-                    }
+                    Swal.fire({
+                        title: "로그인 성공 🎉",
+                        text: "잠시 후 홈으로 이동합니다.",
+                        icon: "success",
+                        timer: 2000,
+                        showConfirmButton: false,
+                        didOpen: () => Swal.showLoading()
+                    }).then(() => {
+                        window.location.href = "/home";
+                    });
                 } else {
-                    const data = await res.json().catch(() => ({}));
                     showError(data.message || "로그인에 실패했습니다.");
                 }
             })

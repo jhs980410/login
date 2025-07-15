@@ -4,6 +4,7 @@ import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.dto.MemberSignupRequest;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -65,4 +66,10 @@ public class MemberService {
         memberRepository.updatePassword(email, encodedPassword);
 
     }
+    public String findEmailByUserId(Long userId) {
+        return memberRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."))
+                .getEmail(); // getUsername()을 쓴다면 이메일이 username이라면 그것도 가능
+    }
+
 }

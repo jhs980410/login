@@ -28,17 +28,17 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final RememberTokenService rememberTokenService;
 
 
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        System.out.println(" SuccessHandler 호출됨");
+        System.out.println("✅ SuccessHandler 호출됨");
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+
         if (oAuth2User.getMember().getLoginType().name().equalsIgnoreCase("LOCAL")) {
             String email = oAuth2User.getMember().getEmail();
             String loginType = oAuth2User.getUserInfo().getProvider().toLowerCase();
 
-            // ✅ 세션에 providerId와 profileImage 저장
+            // 연동 처리용 세션 저장
             request.getSession().setAttribute("providerId", oAuth2User.getUserInfo().getProviderId());
             request.getSession().setAttribute("profileImage", oAuth2User.getUserInfo().getProfileImage());
             request.getSession().setAttribute("loginType", loginType);
@@ -49,33 +49,31 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(redirectUrl);
             return;
         }
+
+        // ✅ 정상 소셜 로그인 사용자
         Long userId = oAuth2User.getMember().getId();
         String email = oAuth2User.getMember().getEmail();
 
-        // 토큰 발급
+        // JWT 발급
         String accessToken = jwtTokenUtil.generateToken(email);
         String refreshToken = jwtTokenUtil.generateRefreshToken(email);
         LocalDateTime refreshExp = jwtTokenUtil.getRefreshTokenExpiryDate();
-        System.out.println("🔍 [DEBUG] OAuth2 로그인 성공 후 토큰 저장 시작");
-        System.out.println("🔑 userId: " + userId);
-        System.out.println("🔑 refreshToken: " + refreshToken);
-        System.out.println("🔑 refreshExp: " + refreshExp);
-        System.out.println("🔑 userAgent: " + request.getHeader("User-Agent"));
-        System.out.println("🔑 ipAddress: " + request.getRemoteAddr());
 
-        //  별도 트랜잭션 서비스로 토큰 저장
+        // 저장
         rememberTokenService.saveRefreshToken(
                 userId,
                 refreshToken,
                 refreshExp,
                 request.getHeader("User-Agent"),
                 request.getRemoteAddr(),
-                false // 소셜 로그인은 auto_login = 0
+                false // 소셜 로그인은 자동 로그인 X
         );
 
-        // 응답
-        String redirectUrl = String.format("/redirect.html?accessToken=%s&refreshToken=%s", accessToken, refreshToken);
-        log.info(" 소셜 로그인 성공. Redirecting to {}", redirectUrl);
-        response.sendRedirect(redirectUrl);
+        // ✅ 쿠키 설정
+        response.setHeader("Set-Cookie", jwtTokenUtil.createAccessTokenCookie(accessToken).toString());
+        response.addHeader("Set-Cookie", jwtTokenUtil.createRefreshTokenCookie(refreshToken).toString());
+
+        // ✅ redirect.html로 이동 (토큰은 쿠키로 전달됨)
+        response.sendRedirect("/redirect.html");
     }
 }

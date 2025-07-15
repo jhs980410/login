@@ -9,30 +9,21 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const params = new URLSearchParams(window.location.search);
-        const accessToken = params.get("accessToken");
-        const refreshToken = params.get("refreshToken");
+        // 쿠키 기반 로그인이라 토큰은 JS에서 접근 불가 (HttpOnly)
+        // 단순히 알림 후 리디렉션만 수행
 
-        if (accessToken && refreshToken) {
-            localStorage.setItem("accessToken", accessToken);
-            localStorage.setItem("refreshToken", refreshToken);
-            localStorage.setItem("isSocial", "true");
-            Swal.fire({
-                title: "로그인 성공 🎉",
-                text: "잠시 후 홈으로 이동합니다.",
-                icon: "success",
-                timer: 2000,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            }).then(() => {
-                window.location.href = "/home";
-            });
-        } else {
-            Swal.fire("로그인 실패", "토큰 정보가 유효하지 않습니다.", "error");
-        }
+        Swal.fire({
+            title: "로그인 성공 🎉",
+            text: "잠시 후 홈으로 이동합니다.",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading()
+        }).then(() => {
+            window.location.href = "/home";
+        });
     });
 </script>
+
 </body>
 </html>
