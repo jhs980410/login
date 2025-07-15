@@ -34,6 +34,7 @@ public class AuthService {
 
     public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) {
         //  인증 시도
+        System.out.println("로그인 입력 비밀번호: " + request.getPassword());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(), request.getPassword()
@@ -105,5 +106,6 @@ public class AuthService {
         String stored = commonService.get(email);
         return stored != null && stored.equals(inputCode);
     }
+
 
 }

@@ -27,6 +27,8 @@ public class MemberService {
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
+        System.out.println("입력 비밀번호: " + request.getPassword());
+        System.out.println("인코딩 비밀번호: " + passwordEncoder.encode(request.getPassword()));
         Member member = request.toEntity(encodedPassword); //
 
         memberRepository.save(member); //회원가입
@@ -56,5 +58,11 @@ public class MemberService {
 
     public void update(Member member) {
         memberRepository.save(member);
+    }
+
+    public void updatePassword(String email, String newPassword) {
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        memberRepository.updatePassword(email, encodedPassword);
+
     }
 }

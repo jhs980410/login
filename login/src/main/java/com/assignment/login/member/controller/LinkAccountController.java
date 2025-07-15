@@ -4,7 +4,6 @@ import com.assignment.login.auth.service.AuthService;
 import com.assignment.login.member.domain.enums.LoginType;
 import com.assignment.login.member.service.SocialAccountLinkService;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;

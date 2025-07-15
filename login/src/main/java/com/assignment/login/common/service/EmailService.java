@@ -16,8 +16,13 @@ public class EmailService {
         message.setTo(toEmail);
         message.setSubject("[로그인] 이메일 인증 코드 안내");
         message.setText("요청하신 인증 코드는 다음과 같습니다:\n\n" + code + "\n\n3분 내로 입력해주세요.");
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("호출안됨");
+        }
 
-        mailSender.send(message);
     }
 
 }

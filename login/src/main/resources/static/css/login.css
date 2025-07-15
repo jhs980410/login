@@ -932,3 +932,10 @@ input, textarea, button, select {
     background-color: #000000;
     color: #ffffff;
 }
+.recovery .open {
+    display: block;
+}
+
+.recovery .closed {
+    display: none;
+}

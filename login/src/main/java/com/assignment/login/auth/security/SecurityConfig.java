@@ -52,6 +52,7 @@ public class SecurityConfig {
                                 "/api/auth/redirect",
                                 "/api/auth/sendCode",
                                 "/api/auth/verifyCode",
+                                "/api/auth/resetPassword",
                                 "/link/**",
                                 "/redirect.html",
                                 "/linkAccount.html",

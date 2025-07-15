@@ -93,7 +93,23 @@
                     <input type="submit" id="recovery-submit-btn" class="button" value="제출">
                 </form>
 
-                <p class="mssg">추가 안내가 포함된 이메일이 발송되었습니다.</p>
+                <div class="verify-code-form closed">
+                    <p>이메일로 전송된 인증번호를 입력해주세요</p>
+                    <form id="verify-code-form">
+                        <input type="text" id="verify_code_input" class="input" placeholder="인증번호 6자리">
+                        <input type="submit" class="button" value="인증 확인">
+                    </form>
+                    <div id="code_error_msg" class="error-msg" style="display: none;"></div>
+                </div>
+
+                <!-- 비밀번호 재설정 폼 (인증 성공 후에만 열림) -->
+                <div class="reset-password-form closed">
+                    <form id="reset-password-form">
+                        <input type="password" id="new_password" class="input" placeholder="새 비밀번호">
+                        <input type="password" id="confirm_password" class="input" placeholder="비밀번호 확인">
+                        <input type="submit" class="button" value="비밀번호 재설정">
+                    </form>
+                </div>
             </div>
 
 
