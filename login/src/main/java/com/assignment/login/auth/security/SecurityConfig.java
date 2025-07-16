@@ -56,11 +56,13 @@ public class SecurityConfig {
                                 "/api/members/check-email",
                                 "/api/members/check-nickname",
                                 "/css/**", "/js/**", "/images/**",
-                                "/", "/home", "/error/**","/oauth2/**", "/login/oauth2/**"
+                                "/", "/error/**","/oauth2/**", "/login/oauth2/**"
                         ).permitAll()
+                        .requestMatchers("/home").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/member/loginPage")
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService) //  수동 Bean 호출로 주입
                         )
