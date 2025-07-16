@@ -1,78 +1,72 @@
 package com.assignment.login.auth.service;
 
-import com.assignment.login.auth.domain.LoginFail;
-import com.assignment.login.auth.repository.LoginFailRepository;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.domain.enums.LoginType;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LoginFailService {
 
-    private final LoginFailRepository loginFailRepository;
+    private final StringRedisTemplate redisTemplate;
     private final MemberRepository memberRepository;
 
+    private static final String PREFIX = "login:fail:";
+    private static final int LOCK_THRESHOLD = 5;
+    private static final int LOCK_DURATION = 5; // 분
 
+    // 로그인 실패 기록
     public void recordFail(Member member) {
-        if (!member.getLoginType().equals(LoginType.LOCAL)) {
-            return;
-        } //소셜일경우 return
+        if (member.getLoginType() != LoginType.LOCAL) return;
 
-        // 로그인 실패 기록 (Member 객체 기반)
+        String key = PREFIX + member.getId();
 
-        LoginFail fail = loginFailRepository.findByUserId(member.getId())
-                .orElseGet(() -> createNewFail(member.getId()));
+        Long failCount = redisTemplate.opsForValue().increment(key);
+        redisTemplate.expire(key, Duration.ofMinutes(LOCK_DURATION));
 
-        int newCount = fail.getFailCount() + 1;
-        fail.setFailCount(newCount);
-        fail.setLastFailAt(LocalDateTime.now());
-
-        loginFailRepository.save(fail);
-
-        if (newCount >= 5) {
-            member.setLocked(true); // 계정 잠금
+        if (failCount != null && failCount >= LOCK_THRESHOLD) {
+            member.setLocked(true);
             memberRepository.save(member);
         }
     }
 
+    // 이메일 기반 실패 기록
+    public void recordFailByEmail(String email) {
+        memberRepository.findByEmail(email)
+                .ifPresent(this::recordFail);
+    }
 
     // 로그인 성공 시 실패 기록 초기화
     public void resetFailCount(String email) {
         Member member = memberRepository.findByEmail(email).orElse(null);
-        if (member == null) {
-            return;
-        }
+        if (member == null) return;
 
-        LoginFail loginFail = loginFailRepository.findByUserId(member.getId()).orElse(null);
-        if (loginFail != null) {
-            loginFail.setFailCount(0);
-            loginFailRepository.save(loginFail);
-        }
+        redisTemplate.delete(PREFIX + member.getId());
 
         if (member.isLocked()) {
-            member.setLocked(false); //  잠금 해제
+            member.setLocked(false);
             memberRepository.save(member);
         }
     }
 
-    // 실패 정보 새로 생성
-    private LoginFail createNewFail(Long userId) {
-        LoginFail fail = new LoginFail();
-        fail.setUserId(userId);
-        fail.setFailCount(0);
-        fail.setLastFailAt(LocalDateTime.now());
-        return fail;
-    }
+    // TTL 기반 잠금 해제 예상 시간 반환
+    public LocalDateTime getUnlockTime(Member member) {
+        String key = PREFIX + member.getId();
+        Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
 
-    public void recordFailByEmail(String email) {
-        memberRepository.findByEmail(email)
-                .ifPresent(this::recordFail);
+        if (ttl != null && ttl > 0) {
+            return LocalDateTime.now().plusSeconds(ttl);
+        }
+
+        return null;
     }
 }

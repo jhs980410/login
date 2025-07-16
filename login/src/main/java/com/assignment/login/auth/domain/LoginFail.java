@@ -1,31 +1,20 @@
 package com.assignment.login.auth.domain;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@Entity
-@Table(name = "login_fail")
-public class LoginFail {
+@Data
+public class LoginFail implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "user_id", nullable = false)
     private Long userId;
-
-    @Column(name = "fail_count")
     private int failCount;
-
-    @Column(name = "last_fail_at")
     private LocalDateTime lastFailAt;
+
+    public LoginFail() {
+        // 기본 생성자 (역직렬화를 위해 필요)
+    }
 
     public LoginFail(Long userId) {
         this.userId = userId;
@@ -33,4 +22,3 @@ public class LoginFail {
         this.lastFailAt = LocalDateTime.now();
     }
 }
-

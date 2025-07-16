@@ -1,14 +1,12 @@
 package com.assignment.login.auth.security;
 
-import com.assignment.login.auth.domain.LoginFail;
-import com.assignment.login.auth.repository.LoginFailRepository;
+import com.assignment.login.auth.service.LoginFailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
@@ -16,29 +14,25 @@ import java.time.LocalDateTime;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
-    private final LoginFailRepository loginFailRepository;
+    private final LoginFailService loginFailService;
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
-        LoginFail loginFail = loginFailRepository.findByUserId(member.getId())
-                .orElse(null);
+        // 계정이 잠금 상태일 경우 잠금 해제 시간 확인
+        if (member.isLocked()) {
+            LocalDateTime unlockTime = loginFailService.getUnlockTime(member);
 
-        //  잠금 상태일 때만 검사
-        if (member.isLocked() && loginFail != null && loginFail.getLastFailAt() != null) {
-            Duration duration = Duration.between(loginFail.getLastFailAt(), LocalDateTime.now());
-
-            if (duration.toMinutes() >= 5) {
-                //  5분 지났으면 계정 잠금 해제 + 실패 횟수 초기화
+            if (unlockTime == null || unlockTime.isBefore(LocalDateTime.now())) {
+                // 잠금 기간이 지났으면 계정 잠금 해제 및 Redis 기록 삭제
                 member.setLocked(false);
-                loginFail.setFailCount(0);
                 memberRepository.save(member);
-                loginFailRepository.save(loginFail);
+                loginFailService.resetFailCount(email);
             }
         }
 
-        return new CustomUserDetails(member, loginFail);
+        return new CustomUserDetails(member);
     }
-
 }

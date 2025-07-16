@@ -2,12 +2,9 @@ package com.assignment.login.auth.controller;
 
 import com.assignment.login.auth.dto.LoginRequest;
 import com.assignment.login.auth.service.AuthService;
-import com.assignment.login.auth.domain.LoginFail;
-import com.assignment.login.auth.repository.LoginFailRepository;
 import com.assignment.login.auth.service.LoginFailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.domain.enums.LoginType;
-import com.assignment.login.member.repository.MemberRepository;
 import com.assignment.login.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,8 +26,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
-
-    private final LoginFailRepository loginFailRepository;
 
     private final AuthService authService;
     private final LoginFailService loginFailService;
@@ -70,14 +65,16 @@ public class AuthController {
             response.setHeader("Set-Cookie", accessTokenCookie.toString());
             response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
+            // 로그인 성공 시 실패 기록 초기화
+            loginFailService.resetFailCount(request.getEmail());
+
             return ResponseEntity.ok(Map.of("message", "로그인 성공"));
 
         } catch (LockedException e) {
             Member member = memberService.findByEmail(request.getEmail()).orElse(null);
             if (member != null) {
-                LoginFail fail = loginFailRepository.findByUserId(member.getId()).orElse(null);
-                if (fail != null && fail.getLastFailAt() != null) {
-                    LocalDateTime unlockTime = fail.getLastFailAt().plusMinutes(5);
+                LocalDateTime unlockTime = loginFailService.getUnlockTime(member);
+                if (unlockTime != null) {
                     String formatted = unlockTime.format(DateTimeFormatter.ofPattern("HH시 mm분 이후"));
                     return ResponseEntity.status(HttpStatus.LOCKED)
                             .body(Map.of("message", "계정이 잠겨 있습니다. " + formatted + "에 다시 로그인해주세요."));
@@ -89,14 +86,13 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             Member member = memberService.findByEmail(request.getEmail()).orElse(null);
 
-            // 존재하는 계정일 때만 분기
             if (member != null) {
                 if (member.getLoginType() != LoginType.LOCAL) {
-                    // 소셜 로그인 계정인데 비밀번호 입력 시도 → 안내 메시지
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body(Map.of("message", "소셜 로그인 전용 계정입니다. 카카오/구글 로그인을 이용해 주세요."));
                 }
-                // 로컬 계정인 경우 실패 카운트 증가
+
+                // Redis에 실패 기록
                 loginFailService.recordFail(member);
             }
 
