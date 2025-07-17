@@ -26,6 +26,23 @@ CREATE TABLE login_fail (
                             FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
+CREATE TABLE login_history (
+                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                               user_id BIGINT NOT NULL,
+                               ip_address VARCHAR(45),
+                               user_agent TEXT,
+                               success BOOLEAN NOT NULL,
+                               suspicious BOOLEAN NOT NULL,
+                               login_at DATETIME NOT NULL,
+
+                               CONSTRAINT fk_login_history_user FOREIGN KEY (user_id)
+                                   REFERENCES user (user_id)
+                                   ON DELETE CASCADE
+);
+ALTER TABLE login_history
+    ADD COLUMN location VARCHAR(100) DEFAULT NULL,
+    ADD COLUMN device_type VARCHAR(50) DEFAULT NULL,
+    ADD INDEX idx_login_at (login_at);
 
 CREATE TABLE remember_token (
                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,

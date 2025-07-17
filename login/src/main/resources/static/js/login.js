@@ -100,7 +100,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     }).then(() => {
                         window.location.href = "/home";
                     });
-                } else {
+                } else if (res.status === 401) {
+                    showError(data.message || "새 기기에서의 로그인입니다. 본인 인증이 필요합니다.");
+                }else {
                     showError(data.message || "로그인에 실패했습니다.");
                 }
             })

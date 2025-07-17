@@ -1,6 +1,7 @@
 package com.assignment.login.auth.controller;
 
 import com.assignment.login.auth.dto.LoginRequest;
+import com.assignment.login.auth.exception.SuspiciousLoginException;
 import com.assignment.login.auth.service.AuthService;
 import com.assignment.login.auth.service.LoginFailService;
 import com.assignment.login.member.domain.Member;
@@ -98,6 +99,8 @@ public class AuthController {
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "이메일 또는 비밀번호가 일치하지 않습니다."));
+        }catch (SuspiciousLoginException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비정상 로그인 - 인증 필요");
         }
     }
 

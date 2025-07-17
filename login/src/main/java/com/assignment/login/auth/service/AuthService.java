@@ -1,6 +1,7 @@
 package com.assignment.login.auth.service;
 
 import com.assignment.login.auth.dto.LoginRequest;
+import com.assignment.login.auth.exception.SuspiciousLoginException;
 import com.assignment.login.auth.util.JwtTokenUtil;
 import com.assignment.login.auth.domain.RefreshToken;
 import com.assignment.login.auth.repository.RefreshTokenRepository;
@@ -9,12 +10,14 @@ import com.assignment.login.common.service.EmailService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -31,25 +34,69 @@ public class AuthService {
     private final LoginFailService loginFailService;
     private final CommonService commonService;
     private final EmailService emailService;
+    private final RedisTemplate redisTemplate;
+    private final LoginHistoryService loginHistoryService;
 
-    public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) {
-        //  인증 시도
-        System.out.println("로그인 입력 비밀번호: " + request.getPassword());
+    public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) throws SuspiciousLoginException {
+        // 인증 시도
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(), request.getPassword()
                 )
         );
 
-        //  사용자 정보 및 토큰 발급
         String email = authentication.getName();
         boolean autoLogin = request.isAutoLogin();
+        Member member = memberRepository.findByEmail(email).orElseThrow();
+
+        // Redis에서 최근 로그인 정보 조회
+        String redisKey = "recentLogin:" + member.getEmail();
+        String recentLogin = (String) redisTemplate.opsForValue().get(redisKey);
+
+        boolean isSuspicious = false;
+        if (recentLogin != null) {
+            String[] parts = recentLogin.split("\\|");
+            if (parts.length >= 2) {
+                String recentIp = parts[0];
+                String recentUserAgent = parts[1];
+                if (!recentIp.equals(ipAddress) || !recentUserAgent.equals(userAgent)) {
+                    isSuspicious = true;  // 다른 IP 또는 브라우저
+                }
+            } else {
+                isSuspicious = true; // 포맷 이상 → 의심
+            }
+        } else {
+            // 👉 최초 로그인으로 판단
+            String combined = ipAddress + "|" + userAgent;
+            redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
+
+            //  로그인 히스토리 저장
+            loginHistoryService.saveLoginHistory(
+                    member,
+                    ipAddress,
+                    userAgent,
+                    null,              // location → 나중에 GeoIP 등으로 넣을 수 있음
+                    null,              // deviceType → 나중에 user-agent 파싱으로 가능
+                    true,              // success
+                    false              // suspicious
+            );
+
+        }
+        if (isSuspicious) {
+            redisTemplate.opsForValue().set("needs_verification:" + member.getId(), "true", Duration.ofMinutes(10));
+            loginHistoryService.saveLoginHistory(
+                    member, ipAddress, userAgent, null, null, true, true
+            );
+            throw new SuspiciousLoginException("비정상 로그인 감지됨. 인증이 필요합니다.");
+        }
+        // 정상 로그인 → 최근 로그인 정보 갱신
+        String combined = ipAddress + "|" + userAgent;
+        redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
+
+        // 토큰 발급
         String accessToken = jwtTokenUtil.generateToken(email);
         String refreshToken = jwtTokenUtil.generateRefreshToken(email, autoLogin);
 
-        Member member = memberRepository.findByEmail(email).orElseThrow();
-
-        //  기존 토큰 삭제 및 저장
         RefreshToken token = RefreshToken.builder()
                 .userId(member.getId())
                 .token(refreshToken)
@@ -61,10 +108,9 @@ public class AuthService {
         refreshTokenRepository.deleteByUserId(member.getId());
         refreshTokenRepository.save(token);
 
-        //  로그인 실패 횟수 초기화
+        // 실패 횟수 초기화
         loginFailService.resetFailCount(email);
 
-        //  토큰 반환
         return Map.of(
                 "accessToken", accessToken,
                 "refreshToken", refreshToken
