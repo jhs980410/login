@@ -66,7 +66,7 @@ public class AuthService {
                 isSuspicious = true; // 포맷 이상 → 의심
             }
         } else {
-            // 👉 최초 로그인으로 판단
+            //  최초 로그인으로 판단
             String combined = ipAddress + "|" + userAgent;
             redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
 
