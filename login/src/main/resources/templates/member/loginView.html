@@ -129,9 +129,9 @@
                     <!-- 로그인 -->
                     <div id="login-tab-content" class="active">
 
-                        <form id="login-form" class="login-form">
-                            <input type="text" class="input" id="user_login" name="email" autocomplete="off" placeholder="이메일" required>
-                            <input type="password" class="input" id="user_password" name="password" autocomplete="off" placeholder="비밀번호" required>
+                        <form id="login-form" class="login-form" autocomplete="on">
+                            <input type="text" class="input" id="user_login" name="email" autocomplete="email" placeholder="이메일" required>
+                            <input type="password" class="input" id="user_password" name="password" autocomplete="current-password" placeholder="비밀번호" required>
 
                             <div id="locked-message" style="display: none;" class="error-msg">
                                 계정이 잠겨 있습니다.

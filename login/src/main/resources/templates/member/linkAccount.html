@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>계정 연동</title>
+    <title>인증 요청</title>
     <link rel="stylesheet" href="/css/linkAccount.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 <div class="link-account-container">
-    <h2>계정 연동 안내</h2>
-    <p th:text="'해당 이메일(' + ${email} + ')은 이미 로컬 계정으로 가입되어 있습니다.'"></p>
-    <p>계정 연동을 위해 이메일 인증이 필요합니다.</p>
+    <h2 th:text="${mode == 'login'} ? '새 기기 로그인 인증' : '계정 연동 안내'"></h2>
 
-    <!-- 절대 경로로 수정 -->
+    <p th:if="${mode == 'link'}"
+       th:text="'해당 이메일(' + ${email} + ')은 이미 로컬 계정으로 가입되어 있습니다.'"></p>
+
+    <p th:text="${mode == 'login'} ? '새로운 기기에서의 로그인 시도가 감지되었습니다. 본인 인증을 진행해주세요.' : '계정 연동을 위해 이메일 인증이 필요합니다.'"></p>
+
+    <!-- 인증 코드 전송 -->
     <form th:action="@{/link/sendCode}" id="send-code-form" method="post">
-        <input type="hidden" name="email" th:value="${email}" />
-        <button type="submit">인증 코드 전송</button>
+        <input type="hidden" name="email" th:value="${email}" id="email-send" />
+        <button type="submit" th:text="${mode == 'login'} ? '인증 코드 재전송' : '인증 코드 전송'"></button>
     </form>
 
-    <form th:action="@{/link/verifyCode}" method="post">
-        <input type="hidden" name="email" th:value="${email}" />
-        <input type="text" name="authCode" placeholder="인증 코드 입력" required />
-        <button type="submit">연동 진행</button>
+    <!-- 인증 코드 확인 (AJAX) -->
+    <form id="verify-code-form">
+        <input type="hidden" name="email" th:value="${email}" id="email" />
+        <input type="text" name="authCode" id="authCode" placeholder="인증 코드 입력" required />
+        <button type="submit" th:text="${mode == 'login'} ? '로그인 계속하기' : '연동 진행'" id="verifyBtn"></button>
     </form>
 
     <a th:href="@{/member/loginPage}">돌아가기</a>

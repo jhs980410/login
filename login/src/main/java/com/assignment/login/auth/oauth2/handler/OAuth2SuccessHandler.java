@@ -33,6 +33,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication) throws IOException, ServletException {
         System.out.println("✅ SuccessHandler 호출됨");
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        System.out.println("✅ 세션 ID in SuccessHandler = " + request.getSession().getId());
 
         if (oAuth2User.getMember().getLoginType().name().equalsIgnoreCase("LOCAL")) {
             String email = oAuth2User.getMember().getEmail();

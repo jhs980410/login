@@ -1,13 +1,23 @@
 package com.assignment.login.member.controller;
 
 import com.assignment.login.auth.service.AuthService;
+import com.assignment.login.auth.service.LoginHistoryService;
+import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.domain.enums.LoginType;
+import com.assignment.login.member.service.MemberService;
 import com.assignment.login.member.service.SocialAccountLinkService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
+import java.util.Optional;
 
 @RequestMapping("/link")
 @Controller
@@ -15,10 +25,16 @@ public class LinkAccountController {
 
     private final AuthService authService;
     private final SocialAccountLinkService socialAccountLinkService;
+    private final LoginHistoryService loginHistoryService;
+    private final MemberService memberService;
+    private final RedisTemplate redisTemplate;
 
-    public LinkAccountController(AuthService authService, SocialAccountLinkService socialAccountLinkService) {
+    public LinkAccountController(AuthService authService, SocialAccountLinkService socialAccountLinkService, LoginHistoryService loginHistoryService, MemberService memberService, RedisTemplate redisTemplate) {
         this.authService = authService;
         this.socialAccountLinkService = socialAccountLinkService;
+        this.loginHistoryService = loginHistoryService;
+        this.memberService = memberService;
+        this.redisTemplate = redisTemplate;
     }
 
     // 1. 계정 연동 페이지 렌더링
@@ -26,8 +42,12 @@ public class LinkAccountController {
     public String showLinkPage(@RequestParam String email,
                                @RequestParam String type,
                                Model model,
+                               @RequestParam(defaultValue = "link") String mode,
                                HttpSession session) {
         model.addAttribute("email", email);
+        model.addAttribute("mode", mode);
+
+        session.setAttribute("mode", mode);
         session.setAttribute("loginType", type.toUpperCase());
         return "member/linkAccount";
     }
@@ -38,24 +58,46 @@ public class LinkAccountController {
                                    HttpSession session,
                                    RedirectAttributes redirectAttributes) {
         authService.generateAndSendCode(email);
+
+        String mode = (String) session.getAttribute("mode");
+
         redirectAttributes.addFlashAttribute("message", "인증 코드가 이메일로 전송되었습니다.");
-        return "redirect:/link/account?email=" + email + "&type=" + session.getAttribute("loginType");
+        return "redirect:/link/account?email=" + email + "&type=" + session.getAttribute("loginType") + "&mode=" + mode;
+
     }
 
     // 3. 인증코드 검증 후 동의 페이지로 이동
     @PostMapping("/verifyCode")
-    public String verifyLinkCode(@RequestParam String email,
-                                 @RequestParam String authCode,
-                                 HttpSession session,
-                                 RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public ResponseEntity<?> verifyLinkCode(@RequestBody Map<String, String> request,
+                                            HttpSession session,
+                                            HttpServletRequest httpRequest) {
+        String email = request.get("email");
+        String authCode = request.get("authCode");
+        String mode = (String) session.getAttribute("mode");
+        String deviceId = request.get("deviceId");
         if (authService.verifyCode(email, authCode)) {
             session.setAttribute("linkAccountEmail", email);
-            return "redirect:/link/confirm";
+
+            if ("login".equals(mode)) {
+                Optional<Member> member = memberService.findByEmail(email);
+                loginHistoryService.saveLoginHistory(member.orElse(null),
+                        httpRequest.getRemoteAddr(),
+                        httpRequest.getHeader("User-Agent"),
+                        null, null,
+                        true, true,deviceId );
+                redisTemplate.delete("needs_verification:" + member.get().getId());
+
+                return ResponseEntity.ok(Map.of("status", "success", "mode", "login"));
+            } else {
+                return ResponseEntity.ok(Map.of("status", "success", "mode", "link"));
+            }
+
         } else {
-            redirectAttributes.addFlashAttribute("error", "인증 코드가 올바르지 않습니다.");
-            return "redirect:/link/account?email=" + email + "&type=" + session.getAttribute("loginType");
+            return ResponseEntity.ok(Map.of("status", "fail", "message", "인증 코드가 올바르지 않습니다."));
         }
     }
+
 
     // 4. 동의 페이지 렌더링
     @GetMapping("/confirm")

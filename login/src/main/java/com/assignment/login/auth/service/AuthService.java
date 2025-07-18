@@ -38,7 +38,7 @@ public class AuthService {
     private final LoginHistoryService loginHistoryService;
 
     public Map<String, String> login(LoginRequest request, String userAgent, String ipAddress) throws SuspiciousLoginException {
-        // 인증 시도
+        // 1. 인증 시도
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(), request.getPassword()
@@ -48,8 +48,9 @@ public class AuthService {
         String email = authentication.getName();
         boolean autoLogin = request.isAutoLogin();
         Member member = memberRepository.findByEmail(email).orElseThrow();
+        String deviceId = request.getDeviceId();
 
-        // Redis에서 최근 로그인 정보 조회
+        // 2. Redis에서 최근 로그인 정보 조회
         String redisKey = "recentLogin:" + member.getEmail();
         String recentLogin = (String) redisTemplate.opsForValue().get(redisKey);
 
@@ -65,35 +66,31 @@ public class AuthService {
             } else {
                 isSuspicious = true; // 포맷 이상 → 의심
             }
-        } else {
-            //  최초 로그인으로 판단
-            String combined = ipAddress + "|" + userAgent;
-            redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
-
-            //  로그인 히스토리 저장
-            loginHistoryService.saveLoginHistory(
-                    member,
-                    ipAddress,
-                    userAgent,
-                    null,              // location → 나중에 GeoIP 등으로 넣을 수 있음
-                    null,              // deviceType → 나중에 user-agent 파싱으로 가능
-                    true,              // success
-                    false              // suspicious
-            );
-
         }
-        if (isSuspicious) {
-            redisTemplate.opsForValue().set("needs_verification:" + member.getId(), "true", Duration.ofMinutes(10));
-            loginHistoryService.saveLoginHistory(
-                    member, ipAddress, userAgent, null, null, true, true
-            );
-            throw new SuspiciousLoginException("비정상 로그인 감지됨. 인증이 필요합니다.");
-        }
-        // 정상 로그인 → 최근 로그인 정보 갱신
+
+        // 3. Redis 정보 갱신
         String combined = ipAddress + "|" + userAgent;
         redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
 
-        // 토큰 발급
+        // 4. 로그인 히스토리 저장 (비정상이든 정상이든 무조건 기록)
+        loginHistoryService.saveLoginHistory(
+                member,
+                ipAddress,
+                userAgent,
+                null,
+                null,
+                !isSuspicious,  // success
+                isSuspicious,    // suspicious
+                deviceId
+        );
+
+        // 5. 비정상 로그인 감지 → Redis 플래그 설정 후 인증 절차 요구
+        if (isSuspicious) {
+            redisTemplate.opsForValue().set("needs_verification:" + member.getId(), "true", Duration.ofMinutes(10));
+            throw new SuspiciousLoginException("비정상 로그인 감지됨. 인증이 필요합니다.");
+        }
+
+        // 6. 토큰 발급
         String accessToken = jwtTokenUtil.generateToken(email);
         String refreshToken = jwtTokenUtil.generateRefreshToken(email, autoLogin);
 
@@ -105,10 +102,11 @@ public class AuthService {
                 .userAgent(userAgent)
                 .ipAddress(ipAddress)
                 .build();
+
         refreshTokenRepository.deleteByUserId(member.getId());
         refreshTokenRepository.save(token);
 
-        // 실패 횟수 초기화
+        // 7. 실패 횟수 초기화
         loginFailService.resetFailCount(email);
 
         return Map.of(
@@ -116,7 +114,6 @@ public class AuthService {
                 "refreshToken", refreshToken
         );
     }
-
     @Transactional
     public void logout(String refreshToken) {
         if (refreshToken == null || !jwtTokenUtil.validateToken(refreshToken)) {
@@ -152,6 +149,37 @@ public class AuthService {
         String stored = commonService.get(email);
         return stored != null && stored.equals(inputCode);
     }
+    public Map<String, String> forceLogin(String email, String deviceId) {
+        Member member = memberRepository.findByEmail(email).orElseThrow();
 
+        String accessToken = jwtTokenUtil.generateToken(email);
+        String refreshToken = jwtTokenUtil.generateRefreshToken(email, false);
+
+        RefreshToken token = RefreshToken.builder()
+                .userId(member.getId())
+                .token(refreshToken)
+                .expiredAt(LocalDateTime.now().plusDays(2))
+                .autoLogin(false)
+                .userAgent("trusted") // 또는 null
+                .ipAddress("trusted") // 또는 null
+                .build();
+
+        refreshTokenRepository.deleteByUserId(member.getId());
+        refreshTokenRepository.save(token);
+
+        // Redis 업데이트도 필요할 수 있음
+        redisTemplate.opsForValue().set("recentLogin:" + member.getEmail(),
+                "trusted_ip|trusted_ua", Duration.ofDays(30));
+
+        // 로그인 히스토리 기록
+        loginHistoryService.saveLoginHistory(
+                member, "trusted_ip", "trusted_ua", null, null, true, false, deviceId
+        );
+
+        return Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
+    }
 
 }

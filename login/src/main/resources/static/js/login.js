@@ -1,3 +1,25 @@
+function getDeviceId() {
+    try {
+        if (!window.localStorage) return null;
+
+        let deviceId = localStorage.getItem("device_id");
+        if (!deviceId) {
+            // UUID 지원 여부 확인
+            if (crypto && crypto.randomUUID) {
+                deviceId = crypto.randomUUID();
+            } else {
+                // fallback: 랜덤 문자열
+                deviceId = 'dev-' + Math.random().toString(36).substring(2, 15);
+            }
+            localStorage.setItem("device_id", deviceId);
+        }
+        return deviceId;
+    } catch (e) {
+        console.warn("기기 ID 생성 실패:", e);
+        return null;
+    }
+}
+
 // 🔹 로그인/회원가입 탭 전환
 $(function () {
     const tab = $('.tabs h3 a');
@@ -80,12 +102,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("user_login").value.trim();
         const password = document.getElementById("user_password").value.trim();
         const autoLogin = document.getElementById("remember_me").checked;
-
+        const deviceId = getDeviceId();
         fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include", // ✅ 쿠키 전송 필수
-            body: JSON.stringify({ email, password, autoLogin })
+            body: JSON.stringify({ email, password, autoLogin,getDeviceId })
         })
             .then(async res => {
                 const data = await res.json().catch(() => ({}));
@@ -100,8 +122,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     }).then(() => {
                         window.location.href = "/home";
                     });
-                } else if (res.status === 401) {
+                }  else if (res.status === 403) {
                     showError(data.message || "새 기기에서의 로그인입니다. 본인 인증이 필요합니다.");
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: '새 기기 로그인 감지',
+                        text: '본인 인증을 위해 페이지로 이동합니다.',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        willClose: () => {
+                            const email = encodeURIComponent(data.email);  //  data.email 사용
+                            location.href = `/link/account?email=${email}&type=LOCAL&mode=login`;
+                        }
+                    });
                 }else {
                     showError(data.message || "로그인에 실패했습니다.");
                 }

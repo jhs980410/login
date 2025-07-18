@@ -43,7 +43,7 @@ public class MemberController {
     @PostMapping("/member/signup")
     public String signup(@ModelAttribute MemberSignupRequest memberSignupRequest) {
         memberService.signup(memberSignupRequest);
-        // 🔧 절대 경로로 리디렉션
+        //  절대 경로로 리디렉션
         return "redirect:/member/loginPage";
 
     }

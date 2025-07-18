@@ -43,6 +43,9 @@ ALTER TABLE login_history
     ADD COLUMN location VARCHAR(100) DEFAULT NULL,
     ADD COLUMN device_type VARCHAR(50) DEFAULT NULL,
     ADD INDEX idx_login_at (login_at);
+ALTER TABLE login_history
+    ADD COLUMN device_id CHAR(36) DEFAULT NULL,
+ADD INDEX idx_user_device (user_id, device_id);
 
 CREATE TABLE remember_token (
                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,

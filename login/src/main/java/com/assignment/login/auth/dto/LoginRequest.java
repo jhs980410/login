@@ -6,5 +6,7 @@ import lombok.Data;
 public class LoginRequest {
     private String email;
     private String password;
+    private String deviceId; //기기식별
+
     boolean autoLogin;
 }

@@ -29,7 +29,7 @@ public class LoginHistory {
     private String location; // 예: "Seoul, KR"
 
     private String deviceType; // 예: "Mobile", "PC"
-
+    private String deviceId; // 기기 고유 ID (UUID, localStorage 기반)
     private Boolean success;
     private Boolean suspicious;
     @Enumerated(EnumType.STRING)

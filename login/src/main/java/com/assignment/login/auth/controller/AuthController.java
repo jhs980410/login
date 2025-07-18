@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,7 +33,7 @@ public class AuthController {
     private final AuthService authService;
     private final LoginFailService loginFailService;
     private final MemberService memberService;
-
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
     @PostMapping("/login")
@@ -100,7 +102,35 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "이메일 또는 비밀번호가 일치하지 않습니다."));
         }catch (SuspiciousLoginException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비정상 로그인 - 인증 필요");
+            String email = request.getEmail();
+            String deviceId = request.getDeviceId(); // 📌 LoginRequest에서 받아야 함
+
+            //  신뢰된 기기 목록 재확인
+            if (deviceId != null) {
+                Boolean trusted = redisTemplate.opsForSet().isMember("trusted_devices:" + email, deviceId);
+                if (Boolean.TRUE.equals(trusted)) {
+                    //  등록된 기기였음 → 예외 무시하고 로그인 성공 처리
+                    Map<String, String> tokens = authService.forceLogin(email, deviceId); // 또는 토큰 재생성
+
+                    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
+                            .httpOnly(true).secure(false).path("/").maxAge(15 * 60).sameSite("Lax").build();
+
+                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
+                            .httpOnly(true).secure(false).path("/").maxAge(14 * 24 * 60 * 60).sameSite("Lax").build();
+
+                    response.setHeader("Set-Cookie", accessTokenCookie.toString());
+                    response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+                    return ResponseEntity.ok(Map.of("message", "신뢰된 기기에서 로그인됨"));
+                }
+            }
+
+            // ❌ 등록된 기기가 아니라면 여전히 인증 필요
+            Map<String, Object> loginres = new HashMap<>();
+            loginres.put("message", "새 기기에서의 로그인입니다. 본인 인증이 필요합니다.");
+            loginres.put("email", email);
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(loginres);
         }
     }
 
