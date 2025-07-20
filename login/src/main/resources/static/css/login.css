@@ -546,6 +546,7 @@ input {
 .form-wrap form .input {
     margin: 0 0 .8em 0;
     padding: .8em 2em 10px 1em;
+    min-height: 65px;
     width: 100%;
     display: inline-block;
     background: #30373F;

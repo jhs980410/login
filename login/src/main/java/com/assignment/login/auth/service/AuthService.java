@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,27 +69,27 @@ public class AuthService {
             }
         }
 
-        // 3. Redis 정보 갱신
+        // 3. 비정상 로그인 감지 → Redis 플래그 설정 후 인증 절차 요구
+        if (isSuspicious) {
+            redisTemplate.opsForValue().set("needs_verification:" + member.getId(), "true", Duration.ofMinutes(10));
+            throw new SuspiciousLoginException("비정상 로그인 감지됨. 인증이 필요합니다.");
+        }
+
+        // 4. Redis 정보 갱신 (정상 로그인일 때만)
         String combined = ipAddress + "|" + userAgent;
         redisTemplate.opsForValue().set(redisKey, combined, Duration.ofDays(30));
 
-        // 4. 로그인 히스토리 저장 (비정상이든 정상이든 무조건 기록)
+        // 5. 로그인 히스토리 저장 (성공 && 정상)
         loginHistoryService.saveLoginHistory(
                 member,
                 ipAddress,
                 userAgent,
                 null,
                 null,
-                !isSuspicious,  // success
-                isSuspicious,    // suspicious
+                true,   // success
+                false,  // suspicious
                 deviceId
         );
-
-        // 5. 비정상 로그인 감지 → Redis 플래그 설정 후 인증 절차 요구
-        if (isSuspicious) {
-            redisTemplate.opsForValue().set("needs_verification:" + member.getId(), "true", Duration.ofMinutes(10));
-            throw new SuspiciousLoginException("비정상 로그인 감지됨. 인증이 필요합니다.");
-        }
 
         // 6. 토큰 발급
         String accessToken = jwtTokenUtil.generateToken(email);
@@ -114,6 +115,7 @@ public class AuthService {
                 "refreshToken", refreshToken
         );
     }
+
     @Transactional
     public void logout(String refreshToken) {
         if (refreshToken == null || !jwtTokenUtil.validateToken(refreshToken)) {
@@ -150,36 +152,52 @@ public class AuthService {
         return stored != null && stored.equals(inputCode);
     }
     public Map<String, String> forceLogin(String email, String deviceId) {
-        Member member = memberRepository.findByEmail(email).orElseThrow();
+        // 1. 사용자 정보 조회 (없으면 예외 발생)
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("회원이 존재하지 않습니다."));
 
+        // 2. JWT 액세스/리프레시 토큰 생성
         String accessToken = jwtTokenUtil.generateToken(email);
         String refreshToken = jwtTokenUtil.generateRefreshToken(email, false);
 
+        // 3. 기존 리프레시 토큰 제거 (하나만 유지하기 위해)
+        refreshTokenRepository.deleteByUserId(member.getId());
+
+        // 4. 새로운 리프레시 토큰 저장
         RefreshToken token = RefreshToken.builder()
                 .userId(member.getId())
                 .token(refreshToken)
                 .expiredAt(LocalDateTime.now().plusDays(2))
-                .autoLogin(false)
-                .userAgent("trusted") // 또는 null
-                .ipAddress("trusted") // 또는 null
+                .autoLogin(false)                         // 강제 로그인이므로 autoLogin false로 고정
+                .userAgent("trusted")                    // trusted device에서 로그인했음을 기록
+                .ipAddress("trusted")                   // 동일하게 IP도 trusted로 기록 (정상 판단 근거)
                 .build();
-
-        refreshTokenRepository.deleteByUserId(member.getId());
         refreshTokenRepository.save(token);
 
-        // Redis 업데이트도 필요할 수 있음
-        redisTemplate.opsForValue().set("recentLogin:" + member.getEmail(),
-                "trusted_ip|trusted_ua", Duration.ofDays(30));
-
-        // 로그인 히스토리 기록
-        loginHistoryService.saveLoginHistory(
-                member, "trusted_ip", "trusted_ua", null, null, true, false, deviceId
+        // 🔄 5. 최근 로그인 정보 Redis에 저장 (기기 중복 판단 위해)
+        redisTemplate.opsForValue().set(
+                "recentLogin:" + member.getEmail(),
+                "trusted_ip|trusted_ua",                 // 단순 예시지만 실제 사용자 IP/UA를 받아도 됨
+                Duration.ofDays(30)                      // 최근 로그인 TTL 설정 (30일 보관)
         );
 
+        // 📝 6. 로그인 히스토리 기록 (신뢰된 기기에서 발생했음을 명시)
+        loginHistoryService.saveLoginHistory(
+                member,
+                "trusted_ip",                            // 또는 request.getRemoteAddr()
+                "trusted_ua",                            // 또는 request.getHeader("User-Agent")
+                null, null,
+                true,                                    // 정상 로그인 여부
+                false,                                   // 수상 로그인 아님
+                deviceId                                 // 기기 ID 명확하게 저장
+        );
+
+        // 7. access / refresh 토큰 반환
         return Map.of(
                 "accessToken", accessToken,
                 "refreshToken", refreshToken
         );
     }
+
 
 }

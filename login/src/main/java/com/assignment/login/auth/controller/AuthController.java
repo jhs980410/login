@@ -4,6 +4,7 @@ import com.assignment.login.auth.dto.LoginRequest;
 import com.assignment.login.auth.exception.SuspiciousLoginException;
 import com.assignment.login.auth.service.AuthService;
 import com.assignment.login.auth.service.LoginFailService;
+import com.assignment.login.auth.service.LoginHistoryService;
 import com.assignment.login.member.domain.Member;
 import com.assignment.login.member.domain.enums.LoginType;
 import com.assignment.login.member.service.MemberService;
@@ -19,6 +20,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -34,6 +36,7 @@ public class AuthController {
     private final LoginFailService loginFailService;
     private final MemberService memberService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final LoginHistoryService loginHistoryService;
 
     @Transactional
     @PostMapping("/login")
@@ -103,35 +106,52 @@ public class AuthController {
                     .body(Map.of("message", "이메일 또는 비밀번호가 일치하지 않습니다."));
         }catch (SuspiciousLoginException e) {
             String email = request.getEmail();
-            String deviceId = request.getDeviceId(); // 📌 LoginRequest에서 받아야 함
+            String deviceId = request.getDeviceId();
+            System.out.println("SuspiciousLoginException 호출됨 deviceId : " + deviceId + " email : " + email);
 
-            //  신뢰된 기기 목록 재확인
+            boolean isTrusted = false;
+
+            // 1단계: Redis에서 신뢰된 기기인지 확인
             if (deviceId != null) {
-                Boolean trusted = redisTemplate.opsForSet().isMember("trusted_devices:" + email, deviceId);
-                if (Boolean.TRUE.equals(trusted)) {
-                    //  등록된 기기였음 → 예외 무시하고 로그인 성공 처리
-                    Map<String, String> tokens = authService.forceLogin(email, deviceId); // 또는 토큰 재생성
-
-                    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
-                            .httpOnly(true).secure(false).path("/").maxAge(15 * 60).sameSite("Lax").build();
-
-                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
-                            .httpOnly(true).secure(false).path("/").maxAge(14 * 24 * 60 * 60).sameSite("Lax").build();
-
-                    response.setHeader("Set-Cookie", accessTokenCookie.toString());
-                    response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-
-                    return ResponseEntity.ok(Map.of("message", "신뢰된 기기에서 로그인됨"));
+                Boolean redisTrusted = redisTemplate.opsForSet().isMember("trusted_devices:" + email, deviceId);
+                if (Boolean.TRUE.equals(redisTrusted)) {
+                    isTrusted = true;
                 }
             }
 
-            // ❌ 등록된 기기가 아니라면 여전히 인증 필요
+            // 2단계: loginHistory 테이블에서 신뢰된 기록 확인
+            if (!isTrusted && deviceId != null) {
+                Long userId = memberService.findByEmail(email).map(Member::getId).orElseThrow();
+
+                isTrusted = loginHistoryService
+                        .existsByMemberIdAndDeviceIdAndSuccessTrue(userId, deviceId);
+                System.out.println("신뢰된기기냐?:" + isTrusted + ", userId : " + userId + ", deviceId : " + deviceId);
+            }
+
+            // ✅ 신뢰된 경우 → 강제 로그인 처리
+            if (isTrusted) {
+                Map<String, String> tokens = authService.forceLogin(email, deviceId);
+
+                ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
+                        .httpOnly(true).secure(false).path("/").maxAge(15 * 60).sameSite("Lax").build();
+
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
+                        .httpOnly(true).secure(false).path("/").maxAge(14 * 24 * 60 * 60).sameSite("Lax").build();
+
+                response.setHeader("Set-Cookie", accessTokenCookie.toString());
+                response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+                return ResponseEntity.ok(Map.of("message", "신뢰된 기기(히스토리 기반)에서 로그인됨"));
+            }
+
+            // ❌ 신뢰되지 않은 경우 → 인증 유도
             Map<String, Object> loginres = new HashMap<>();
             loginres.put("message", "새 기기에서의 로그인입니다. 본인 인증이 필요합니다.");
             loginres.put("email", email);
 
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(loginres);
         }
+
     }
 
     @PostMapping("/logout")

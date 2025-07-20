@@ -9,4 +9,5 @@ public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long
     List<LoginHistory> findByMemberIdOrderByLoginAtDesc(Long memberId);
 
     LoginHistory findTopByMemberIdOrderByLoginAtDesc(Long id);
+    boolean existsByMemberIdAndDeviceIdAndSuccessTrue(Long userId, String deviceId);
 }

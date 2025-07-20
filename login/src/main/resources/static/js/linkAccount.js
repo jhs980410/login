@@ -26,14 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const email = document.getElementById("email").value;
         const authCode = document.getElementById("authCode").value;
-
+        const deviceId = localStorage.getItem("deviceId");
         try {
             const res = await fetch("/link/verifyCode", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email, authCode })
+                body: JSON.stringify({ email, authCode,deviceId })
             });
 
             const result = await res.json();

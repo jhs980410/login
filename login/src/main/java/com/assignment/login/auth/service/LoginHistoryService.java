@@ -15,22 +15,35 @@ public class LoginHistoryService {
 
 
     private final LoginHistoryRepository loginHistoryRepository;
-    public void saveLoginHistory(Member member, String ip, String userAgent, String location, String deviceType, boolean success, boolean suspicious,String deviceId) {
-        // suspicious이면 무조건 저장
+    public void saveLoginHistory(Member member,
+                                 String ip,
+                                 String userAgent,
+                                 String location,
+                                 String deviceType,
+                                 boolean success,
+                                 boolean suspicious,
+                                 String deviceId) {
+
+        // suspicious가 false일 때만 중복 기록 생략 조건 검사
         if (!suspicious) {
             LoginHistory lastLogin = loginHistoryRepository.findTopByMemberIdOrderByLoginAtDesc(member.getId());
 
             if (lastLogin != null) {
-                boolean sameDevice = ip.equals(lastLogin.getIpAddress()) && userAgent.equals(lastLogin.getUserAgent());
-                boolean recentEnough = Duration.between(lastLogin.getLoginAt(), LocalDateTime.now()).toMinutes() < 60;
+                boolean sameDevice =
+                        ip.equals(lastLogin.getIpAddress())
+                                && userAgent.equals(lastLogin.getUserAgent())
+                                && ((deviceId == null && lastLogin.getDeviceId() == null)
+                                || (deviceId != null && deviceId.equals(lastLogin.getDeviceId())));
+                boolean recentEnough =
+                        Duration.between(lastLogin.getLoginAt(), LocalDateTime.now()).toMinutes() < 60;
 
                 if (sameDevice && recentEnough) {
-                    return; // 같은 기기, 최근 접속이면 기록 생략
+                    return; // 같은 기기이고 최근이면 기록 생략
                 }
             }
         }
 
-        // 정상 또는 의심 로그인 저장
+        // 기록 저장
         loginHistoryRepository.save(
                 LoginHistory.builder()
                         .member(member)
@@ -47,10 +60,8 @@ public class LoginHistoryService {
         );
     }
 
-//    public void saveLoginHistory(Member member, String ip, String userAgent, boolean success, boolean suspicious) {
-//        saveLoginHistory(member, ip, userAgent, null, null, success, suspicious);
-//    }
-
-
+    public boolean existsByMemberIdAndDeviceIdAndSuccessTrue(Long userId, String deviceId) {
+        return loginHistoryRepository.existsByMemberIdAndDeviceIdAndSuccessTrue(userId, deviceId);
+    }
 
 }

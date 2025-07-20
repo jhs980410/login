@@ -103,11 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const password = document.getElementById("user_password").value.trim();
         const autoLogin = document.getElementById("remember_me").checked;
         const deviceId = getDeviceId();
+        const deviceidTest = "force-new-device-001";
         fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            credentials: "include", // ✅ 쿠키 전송 필수
-            body: JSON.stringify({ email, password, autoLogin,getDeviceId })
+            credentials: "include", //  쿠키 전송 필수
+            body: JSON.stringify({ email, password, autoLogin, deviceId })
         })
             .then(async res => {
                 const data = await res.json().catch(() => ({}));
