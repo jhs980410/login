@@ -52,7 +52,7 @@ public class AuthController {
             //  accessToken 쿠키 설정
             ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
                     .httpOnly(true)
-                    .secure(false) // 배포 시 true
+                    .secure(true) // 배포 시 true
                     .path("/")
                     .maxAge(15 * 60) // 15분
                     .sameSite("Lax")
@@ -61,7 +61,7 @@ public class AuthController {
             //  refreshToken 쿠키 설정
             ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)
                     .path("/")
                     .maxAge(14 * 24 * 60 * 60) // 14일
                     .sameSite("Lax")
@@ -128,15 +128,15 @@ public class AuthController {
                 System.out.println("신뢰된기기냐?:" + isTrusted + ", userId : " + userId + ", deviceId : " + deviceId);
             }
 
-            // ✅ 신뢰된 경우 → 강제 로그인 처리
+            //  신뢰된 경우 → 강제 로그인 처리
             if (isTrusted) {
                 Map<String, String> tokens = authService.forceLogin(email, deviceId);
 
                 ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.get("accessToken"))
-                        .httpOnly(true).secure(false).path("/").maxAge(15 * 60).sameSite("Lax").build();
+                        .httpOnly(true).secure(true).path("/").maxAge(15 * 60).sameSite("Lax").build();
 
                 ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
-                        .httpOnly(true).secure(false).path("/").maxAge(14 * 24 * 60 * 60).sameSite("Lax").build();
+                        .httpOnly(true).secure(true).path("/").maxAge(14 * 24 * 60 * 60).sameSite("Lax").build();
 
                 response.setHeader("Set-Cookie", accessTokenCookie.toString());
                 response.addHeader("Set-Cookie", refreshTokenCookie.toString());
@@ -144,7 +144,7 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("message", "신뢰된 기기(히스토리 기반)에서 로그인됨"));
             }
 
-            // ❌ 신뢰되지 않은 경우 → 인증 유도
+            //  신뢰되지 않은 경우 → 인증 유도
             Map<String, Object> loginres = new HashMap<>();
             loginres.put("message", "새 기기에서의 로그인입니다. 본인 인증이 필요합니다.");
             loginres.put("email", email);
@@ -162,10 +162,10 @@ public class AuthController {
         }
 
         ResponseCookie accessTokenClear = ResponseCookie.from("accessToken", "")
-                .httpOnly(true).secure(false).path("/").maxAge(0).sameSite("Lax").build();
+                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite("Lax").build();
 
         ResponseCookie refreshTokenClear = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true).secure(false).path("/").maxAge(0).sameSite("Lax").build();
+                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite("Lax").build();
 
         response.setHeader("Set-Cookie", accessTokenClear.toString());
         response.addHeader("Set-Cookie", refreshTokenClear.toString());

@@ -133,7 +133,7 @@ public class JwtTokenUtil {
     public ResponseCookie createAccessTokenCookie(String token) {
         return ResponseCookie.from("accessToken", token)
                 .httpOnly(true)
-                .secure(false) // 운영 환경에서 true
+                .secure(true) // 운영 환경에서 true
                 .path("/")
                 .maxAge(15 * 60)
                 .sameSite("Lax")
@@ -143,7 +143,7 @@ public class JwtTokenUtil {
     public ResponseCookie createRefreshTokenCookie(String token) {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(14 * 24 * 60 * 60) // 14일
                 .sameSite("Lax")
