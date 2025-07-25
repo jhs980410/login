@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Data
 public class LoginFail implements Serializable {
@@ -19,6 +20,6 @@ public class LoginFail implements Serializable {
     public LoginFail(Long userId) {
         this.userId = userId;
         this.failCount = 0;
-        this.lastFailAt = LocalDateTime.now();
+        this.lastFailAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 }

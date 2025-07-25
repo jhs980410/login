@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneId;
 import java.util.Map;
 
 @RestController
@@ -25,7 +26,7 @@ public class TokenController {
         String refreshTokenStr = body.get("refreshToken");
 
         RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr)
-                .filter(token -> token.getExpiredAt().isAfter(java.time.LocalDateTime.now()))
+                .filter(token -> token.getExpiredAt().isAfter(java.time.LocalDateTime.now(ZoneId.of("Asia/Seoul"))))
                 .orElse(null);
 
         if (refreshToken == null) {

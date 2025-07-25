@@ -4,7 +4,7 @@
 # [1] 배포에 필요한 변수 설정
 #########################################
 EC2_USER=ubuntu
-EC2_HOST=13.209.98.147
+EC2_HOST=3.39.102.137
 EC2_KEY=/c/pem/login-server-key-pair.pem
 JAR_FILE=build/libs/login-0.0.1-SNAPSHOT.jar
 REMOTE_DIR=/home/ubuntu/app
@@ -17,7 +17,8 @@ ENV_FILE=.env
 #########################################
 echo "📦 JAR 빌드 중..."
 ./gradlew clean build -x test || { echo "❌ JAR 빌드 실패"; exit 1; }
-
+echo "🧹 .env 줄바꿈(LF) 변환 중..."
+sed -i 's/\r$//' "$ENV_FILE"
 #########################################
 # [3] EC2에 JAR + .env 전송
 #########################################
@@ -47,7 +48,8 @@ EOF
 #########################################
 echo "📋 EC2에서 실행 중인 Java 프로세스:"
 ssh -i "$EC2_KEY" $EC2_USER@$EC2_HOST "ps aux | grep java | grep -v grep"
-
+echo "📄 최근 서버 로그 (상위 20줄):"
+ssh -i "$EC2_KEY" $EC2_USER@$EC2_HOST "tail -n 20 $REMOTE_DIR/log.txt"
 #########################################
 # [6] 접속 안내
 #########################################

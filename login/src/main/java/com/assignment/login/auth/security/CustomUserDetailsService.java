@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (member.isLocked()) {
             LocalDateTime unlockTime = loginFailService.getUnlockTime(member);
 
-            if (unlockTime == null || unlockTime.isBefore(LocalDateTime.now())) {
+            if (unlockTime == null || unlockTime.isBefore(LocalDateTime.now(ZoneId.of("Asia/Seoul")))) {
                 // 잠금 기간이 지났으면 계정 잠금 해제 및 Redis 기록 삭제
                 member.setLocked(false);
                 memberRepository.save(member);

@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.security.*;
 import java.security.spec.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 
@@ -113,13 +114,13 @@ public class JwtTokenUtil {
     }
 
     public LocalDateTime getRefreshTokenExpiryDate() {
-        return LocalDateTime.now().plusDays(2);
+        return LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusDays(2);
     }
 
     public Optional<RefreshTokenPayload> validateAndGetRefreshToken(String token) {
         try {
             Optional<RefreshToken> saved = refreshTokenService.findByToken(token);
-            if (saved.isPresent() && saved.get().getExpiredAt().isAfter(LocalDateTime.now())) {
+            if (saved.isPresent() && saved.get().getExpiredAt().isAfter(LocalDateTime.now(ZoneId.of("Asia/Seoul")))) {
                 RefreshToken rt = saved.get();
                 String email = getEmailFromToken(token); // 여기!
                 return Optional.of(new RefreshTokenPayload(rt.getUserId(), email, rt.isAutoLogin()));

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -98,7 +99,7 @@ public class AuthService {
         RefreshToken token = RefreshToken.builder()
                 .userId(member.getId())
                 .token(refreshToken)
-                .expiredAt(LocalDateTime.now().plusDays(autoLogin ? 14 : 2))
+                .expiredAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusDays(autoLogin ? 14 : 2))
                 .autoLogin(autoLogin)
                 .userAgent(userAgent)
                 .ipAddress(ipAddress)
@@ -167,21 +168,21 @@ public class AuthService {
         RefreshToken token = RefreshToken.builder()
                 .userId(member.getId())
                 .token(refreshToken)
-                .expiredAt(LocalDateTime.now().plusDays(2))
+                .expiredAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusDays(2))
                 .autoLogin(false)                         // 강제 로그인이므로 autoLogin false로 고정
                 .userAgent("trusted")                    // trusted device에서 로그인했음을 기록
                 .ipAddress("trusted")                   // 동일하게 IP도 trusted로 기록 (정상 판단 근거)
                 .build();
         refreshTokenRepository.save(token);
 
-        // 🔄 5. 최근 로그인 정보 Redis에 저장 (기기 중복 판단 위해)
+        //  5. 최근 로그인 정보 Redis에 저장 (기기 중복 판단 위해)
         redisTemplate.opsForValue().set(
                 "recentLogin:" + member.getEmail(),
                 "trusted_ip|trusted_ua",                 // 단순 예시지만 실제 사용자 IP/UA를 받아도 됨
                 Duration.ofDays(30)                      // 최근 로그인 TTL 설정 (30일 보관)
         );
 
-        // 📝 6. 로그인 히스토리 기록 (신뢰된 기기에서 발생했음을 명시)
+        //  6. 로그인 히스토리 기록 (신뢰된 기기에서 발생했음을 명시)
         loginHistoryService.saveLoginHistory(
                 member,
                 "trusted_ip",                            // 또는 request.getRemoteAddr()

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 @Service
@@ -20,7 +21,7 @@ public class RefreshTokenService {
         refreshToken.setToken(token);
         refreshToken.setUserAgent(userAgent);
         refreshToken.setIpAddress(ipAddress);
-        refreshToken.setExpiredAt(LocalDateTime.now().plusDays(7));
+        refreshToken.setExpiredAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusDays(7));
         refreshTokenRepository.save(refreshToken);
     }
 

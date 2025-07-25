@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ public class LoginHistoryService {
                                 && ((deviceId == null && lastLogin.getDeviceId() == null)
                                 || (deviceId != null && deviceId.equals(lastLogin.getDeviceId())));
                 boolean recentEnough =
-                        Duration.between(lastLogin.getLoginAt(), LocalDateTime.now()).toMinutes() < 60;
+                        Duration.between(lastLogin.getLoginAt(), LocalDateTime.now(ZoneId.of("Asia/Seoul"))).toMinutes() < 60;
 
                 if (sameDevice && recentEnough) {
                     return; // 같은 기기이고 최근이면 기록 생략
@@ -54,7 +55,7 @@ public class LoginHistoryService {
                         .success(success)
                         .suspicious(suspicious)
                         .loginType(member.getLoginType())
-                        .loginAt(LocalDateTime.now())
+                        .loginAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                         .deviceId(deviceId)
                         .build()
         );

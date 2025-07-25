@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -64,7 +65,7 @@ public class LoginFailService {
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
 
         if (ttl != null && ttl > 0) {
-            return LocalDateTime.now().plusSeconds(ttl);
+            return LocalDateTime.now(ZoneId.of("Asia/Seoul")).plusSeconds(ttl);
         }
 
         return null;
