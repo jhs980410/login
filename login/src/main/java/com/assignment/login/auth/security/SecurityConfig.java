@@ -67,10 +67,10 @@
                     .oauth2Login(oauth2 -> oauth2
                             .loginPage("/member/loginPage")
                             .userInfoEndpoint(userInfo -> userInfo
-                                    .userService(customOAuth2UserService)
+                                    .userService(customOAuth2UserService) // 사용자 정보 처리
                             )
-                            .successHandler(oAuth2SuccessHandler)
-                            .failureHandler(oAuth2FailureHandler)
+                            .successHandler(oAuth2SuccessHandler)    // 로그인 성공 처리
+                            .failureHandler(oAuth2FailureHandler)    // 로그인 실패 처리
                     );
 
             http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
